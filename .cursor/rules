@@ -1,0 +1,81 @@
+# Cursor Rules for Distracted Driving Detector (DDD) Project
+
+## Project Overview
+This is project "Distracted Driving Detector". Our goal is to build a proof of concept of a system that, using a camera pointed at a road, lets us detect when someone driving by is distracted. Ideally as much as possible of this is automated but it's fine to do things iteratively at first.
+
+## Work breakdown
+- We want to progress incrementally with most operation done manually in the beginning
+- Over time we will implement automation for more and more tasks
+- Human input for this pipeline should only be necessary for a small part of the work
+
+### High level objectives
+- Between certain times of the day, a camera records and stores clips of movement
+  - Recording and storage of clips where something was happening should be fully automated
+  - The human then has to go in and look through the files manually
+  - At the end I should have a place where I can look for clips and manually identify if there is
+    - a car
+    - a driver
+    - a distracted driver
+- Does it have a car in it
+  - At the end I should have a place where I can look for clips with a car in it and manually identify if there is
+    - a driver
+    - a distracted driver
+- Is the driver of the car being distracted
+  - Not looking out front, looking at their phone
+  - At the end I should have a place where I can look for clips with a car and a driver in it and manually identify if there is
+    - a distracted driver
+
+Depending on how far we get, there'll be more or less automation.
+
+## Hardware Constraints
+- The camera that is available to us is a "Raspberry Pi Global Shutter Camera"
+- There are two lenses, 6mm Wide Angle and 16mm Telephoto, we will need to figure out which one we should use
+- The camera is connected to a Raspberry Pi 4 Model B/4GB
+- There is a home NAS so we don't have to worry about storage
+- There is a home lab server so processing can be offloaded, either synchronously e.g. via HTTP or asynchronously e.g. via "messaging" such as placing a file somewhere for further processing
+
+## Software Stack
+- We're free to choose any operating system available on the Raspberry Pi, the home lab server is running a current version of Ubuntu
+- The programming language of choice should be Python for anything that requires programming, for scripting at the file system level Bash is fine too
+- If there ends up being processing that needs to be outside of the recording Raspberry Pi, then that can be deployed on the home lab server using Docker
+- Deployment of both the recording side and the processing side (if there are two) are done via Ansible, in the beginning, manual deployment is fine
+
+## Architecture Requirements
+- Let's design with transactions in mind. For example use messaging via database or via files rather than a direct request
+- Let's design for atomicity
+- Prefer asynchronous processing over synchronous to avoid blocking the camera capture
+- Use message queues or file-based messaging for communication between components
+- Design for fault tolerance - if one component fails, others should continue working
+
+## Technical Guidelines
+- Use OpenCV for computer vision tasks
+- Consider using TensorFlow or PyTorch for machine learning models
+- Implement proper logging for debugging and monitoring
+- Use configuration files for camera settings, model parameters, etc.
+- Design modular components that can be tested independently
+- Use type hints in Python code for better maintainability
+
+## File Organization
+- Separate camera capture logic from detection logic
+- Keep configuration separate from code
+- Organize by functionality: capture, detection, storage, messaging
+- Use clear, descriptive file and directory names
+
+## Testing Strategy
+- This is for a hackathon, no formal tests but make it easy to execute individual components to test them manually
+- Mock camera input for testing detection algorithms
+- Test with sample video files before using live camera
+- The camera is connected to the RPi, development is done over SSH on the raspberry. That means any code executed needs to run on the RPi, consider that when suggesting commands
+
+## Performance Considerations
+- Optimize for real-time processing where possible
+- Consider frame rate vs accuracy trade-offs
+- Use efficient image processing techniques
+- Monitor memory usage on the Raspberry Pi
+
+## When Suggesting Solutions
+- Consider the hardware limitations of the Raspberry Pi
+- Suggest incremental improvements that can be tested quickly
+- Provide alternatives for different processing approaches
+- Explain trade-offs between different technical choices
+- Consider the end-to-end pipeline from capture to detection to storage

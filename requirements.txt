@@ -1,0 +1,26 @@
+# Core dependencies for Distracted Driving Detector
+# Generated from Pipfile.lock
+
+# Computer vision
+opencv-python==4.11.0.86
+
+# Numerical computing
+numpy==2.3.1
+
+# Date/time utilities
+python-dateutil==2.9.0.post0
+
+# Image processing
+Pillow==11.2.1
+
+picamera2
+
+# Note: Picamera2 is installed via system package manager:
+# sudo apt install python3-picamera2 python3-opencv python3-pip
+
+# IMPORTANT: Due to externally managed environment, use virtual environment:
+# 1. Install python3-venv: sudo apt install python3-venv
+# 2. Create virtual environment: python3 -m venv venv
+# 3. Activate it: source venv/bin/activate
+# 4. Install dependencies: pip install -r requirements.txt
+# 5. Run scripts with: python main.py (while venv is activated)
