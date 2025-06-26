@@ -21,19 +21,22 @@ The Watcher system:
 ### Installation
 
 ```bash
-# Install system dependencies
-sudo apt install python3-picamera2 python3-opencv python3-pip python3-venv
+# Run the automated setup script
+./setup.sh
 
-# Create virtual environment
-python3 -m venv venv
+# Activate the virtual environment
 source venv/bin/activate
-
-# Install Python dependencies
-pip install -r requirements.txt
 
 # Start the watcher
 python main.py
 ```
+
+The setup script will:
+- Install system dependencies (picamera2, opencv, etc.)
+- Create a virtual environment
+- Install Python dependencies
+- Test the installation
+- Set up storage directories
 
 ## Configuration
 
@@ -69,6 +72,9 @@ Provides camera interface and frame capture functionality.
 
 ### `config.py`
 Central configuration for all recording parameters.
+
+### `setup.sh`
+Automated installation script that handles all dependencies.
 
 ## Testing
 
@@ -109,10 +115,15 @@ rsync -avz --remove-source-files \
 
 ## Troubleshooting
 
+### Installation Issues
+- **Setup script fails**: Make sure you're not running as root, the script will use sudo when needed
+- **Picamera2 not found**: Run `./setup.sh` to install system dependencies
+- **Virtual environment issues**: The setup script handles this automatically
+
 ### Camera Issues
 - Check camera connections and permissions
-- Verify `picamera2` installation
-- Test with `test_picamera2.py`
+- Verify `picamera2` installation with `python test_picamera2.py`
+- Ensure camera is enabled in `raspi-config`
 
 ### Motion Detection Issues
 - Adjust `MOTION_THRESHOLD` and `MIN_MOTION_AREA` in `config.py`
@@ -140,3 +151,16 @@ The Watcher follows a simple, reliable architecture:
 4. **Configuration System** - Centralized settings management
 
 This design ensures the system can run continuously without manual intervention while maintaining good performance on limited hardware.
+
+## Dependencies
+
+### System Packages (installed via apt)
+- `python3-picamera2` - Camera interface
+- `python3-opencv` - Computer vision
+- `python3-numpy` - Numerical computing
+- `python3-dateutil` - Date/time utilities
+- `python3-pil` - Image processing (Pillow)
+- `python3-pip` - Package manager
+- `python3-venv` - Virtual environment
+
+**Note**: All dependencies are installed automatically by the setup script via the system package manager (apt). This is required due to externally managed environment restrictions on Raspberry Pi.

@@ -36,18 +36,11 @@ The system is split into two specialized components:
 ```bash
 cd watcher/
 
-# Install system dependencies
-sudo apt install python3-picamera2 python3-opencv python3-pip python3-venv
+# Run the automated setup script
+./setup.sh
 
-# Create virtual environment
-python3 -m venv venv
+# Activate the virtual environment
 source venv/bin/activate
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Configure recording settings
-nano config.py
 
 # Start motion recording
 python main.py
@@ -147,10 +140,10 @@ Review clips in organized directories:
 ## Performance Notes
 
 ### Watcher Optimization
-- Lightweight dependencies only
-- Efficient motion detection
-- Automatic clip cleanup
-- Minimal resource usage
+- Lightweight dependencies only (installed via apt)
+- Efficient motion detection with minimal CPU usage
+- Automatic cleanup prevents storage overflow
+- Configurable recording windows reduce unnecessary processing
 
 ### Inspector Optimization
 - YOLOv8n model for speed
@@ -203,7 +196,7 @@ ddd/
 │   ├── motion_detector.py     # Motion detection (RPi)
 │   ├── video_recorder.py      # Video recording (RPi)
 │   ├── config.py              # Watcher configuration
-│   ├── requirements.txt       # RPi dependencies
+│   ├── setup.sh               # Installation script
 │   ├── recorded_clips/        # Video storage
 │   └── README.md              # Watcher documentation
 ├── inspector/                  # ML Analysis & Car Detection
