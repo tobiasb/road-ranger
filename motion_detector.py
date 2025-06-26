@@ -79,6 +79,7 @@ class MotionDetector:
         self.picam.configure(config_dict)
         self.picam.start()
         time.sleep(2)  # Allow camera to warm up
+        self.picam.set_controls({"AwbMode": 6})
 
     def _init_opencv_camera(self):
         """Initialize OpenCV VideoCapture"""

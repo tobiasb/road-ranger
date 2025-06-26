@@ -51,7 +51,8 @@ class CameraStreamer:
         )
         self.picam.configure(config_dict)
         self.picam.start()
-        time.sleep(2)  # Allow camera to warm up
+        time.sleep(2)  # Allow camera to warm-up time
+        self.picam.set_controls({"AwbMode": 6})
 
         # Start camera thread
         self.is_running = True
