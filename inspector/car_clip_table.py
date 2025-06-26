@@ -26,7 +26,7 @@ def main():
 
     for filename in sorted(video_files):
         path = os.path.join(input_dir, filename)
-        analysis = detector.analyze_video_clip(path, sample_frames=5)
+        analysis = detector.analyze_video_clip(path, sample_frames=config.SAMPLE_FRAMES)
         has_car = analysis.get('has_cars', False)
         car_ratio = analysis.get('car_ratio', 0)
         frames = analysis.get('frames_analyzed', 0)

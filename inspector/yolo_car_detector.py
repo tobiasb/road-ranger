@@ -18,7 +18,7 @@ class YOLOCarDetector:
     Detects cars in video clips using YOLOv8
     """
 
-    def __init__(self, model_size: str = 'n'):
+    def __init__(self, model_size: str = None):
         """
         Initialize YOLO car detector
 
@@ -29,11 +29,11 @@ class YOLOCarDetector:
         self.logger = logging.getLogger(__name__)
 
         # Initialize YOLO model
-        self.model_size = model_size
+        self.model_size = model_size or config.MODEL_SIZE
         self.model = self._load_yolo_model()
 
         # Detection settings
-        self.confidence_threshold = 0.5
+        self.confidence_threshold = config.CONFIDENCE_THRESHOLD
         self.car_class_id = 2  # COCO dataset car class ID
         self.min_car_frames = 2  # Minimum frames with cars to consider video as containing cars
 
@@ -41,7 +41,7 @@ class YOLOCarDetector:
         self.input_size = (640, 640)  # YOLO default input size
         self.sample_rate = 3  # Process every 3rd frame for speed
 
-        self.logger.info(f"YOLO car detector initialized with model: yolov8{model_size}")
+        self.logger.info(f"YOLO car detector initialized with model: yolov8{self.model_size}")
 
     def _load_yolo_model(self) -> YOLO:
         """Load YOLO model"""
@@ -100,7 +100,7 @@ class YOLOCarDetector:
             self.logger.error(f"Error in car detection: {e}")
             return []
 
-    def analyze_video_clip(self, video_path: str, sample_frames: int = 10) -> Dict:
+    def analyze_video_clip(self, video_path: str, sample_frames: int = None) -> Dict:
         """
         Analyze a video clip to determine if it contains cars
 
@@ -111,6 +111,9 @@ class YOLOCarDetector:
         Returns:
             Dictionary with analysis results
         """
+        if sample_frames is None:
+            sample_frames = config.SAMPLE_FRAMES
+
         if not os.path.exists(video_path):
             self.logger.error(f"Video file not found: {video_path}")
             return {"error": "File not found"}

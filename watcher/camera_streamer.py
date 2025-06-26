@@ -13,12 +13,15 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import io
 import config
 import numpy as np
+import cv2
+import logging
+from typing import Optional, Callable, Tuple
+
 try:
     from picamera2 import Picamera2
 except ImportError:
     print("Picamera2 is not installed. Install it with: sudo apt install python3-picamera2")
     exit(1)
-import cv2
 
 class CameraStreamer:
     """

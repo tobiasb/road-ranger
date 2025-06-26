@@ -5,8 +5,9 @@ Script to analyze all clips in recorded_clips/ using YOLOv8 and print a table of
 
 import os
 import logging
-from yolo_car_detector import YOLOCarDetector
+import json
 import config
+from yolo_car_detector import YOLOCarDetector
 
 
 def setup_logging():
@@ -37,8 +38,8 @@ def main():
     print(f"Initializing YOLOv8 car detector...")
     print("Note: First run will download the YOLOv8n model (~6MB)")
 
-    # Initialize YOLO detector with nano model for speed
-    detector = YOLOCarDetector(model_size='n')
+    # Initialize detector with config settings
+    detector = YOLOCarDetector(model_size=config.MODEL_SIZE)
 
     results = []
 
@@ -50,7 +51,7 @@ def main():
         path = os.path.join(input_dir, filename)
         print(f"Processing {i+1}/{len(video_files)}: {filename}")
 
-        analysis = detector.analyze_video_clip(path, sample_frames=5)
+        analysis = detector.analyze_video_clip(path, sample_frames=config.SAMPLE_FRAMES)
 
         if "error" in analysis:
             has_car = False

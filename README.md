@@ -6,37 +6,36 @@ A proof-of-concept system that uses a camera pointed at a road to detect when so
 
 This project implements a multi-phase approach to distracted driving detection:
 
-1. **Motion Detection & Recording** ✅ - Automatically records video clips when motion is detected (Raspberry Pi)
-2. **Car Detection** ✅ - Filters clips to identify those containing cars (Server-side ML)
+1. **Motion Detection & Recording** ✅ - Automatically records video clips when motion is detected (Watcher)
+2. **Car Detection** ✅ - Filters clips to identify those containing cars (Inspector)
 3. **Driver Detection** 🔄 - Identifies clips with visible drivers
 4. **Distraction Detection** 🔄 - Analyzes driver behavior for signs of distraction
 
 ## Architecture
 
-### Raspberry Pi (Recording Side)
+The system is split into two specialized components:
+
+### 🕵️ Watcher (Recording Side)
 - **Hardware**: Raspberry Pi 4 + Global Shutter Camera
 - **Role**: Motion detection, video recording, storage
 - **Dependencies**: Lightweight (OpenCV, Picamera2)
-- **Files**: `main.py`, `motion_detector.py`, `video_recorder.py`
+- **Location**: `watcher/` directory
+- **Config**: `watcher/config.py` - Recording and motion detection settings
 
-### Ubuntu Server (Analysis Side)
+### 🔍 Inspector (Analysis Side)
 - **Hardware**: Standard Ubuntu server with more CPU/memory
 - **Role**: ML processing, car detection, analysis
 - **Dependencies**: Heavy ML libraries (YOLOv8, PyTorch)
-- **Files**: `yolo_car_detector.py`, `yolo_car_table.py`
-
-## Hardware Requirements
-
-- **Raspberry Pi**: Pi 4 Model B/4GB + Global Shutter Camera
-- **Server**: Ubuntu 20.04+ with Python 3.9+
-- **Storage**: Home NAS for shared storage
-- **Network**: Both devices on same network
+- **Location**: `inspector/` directory
+- **Config**: `inspector/config.py` - ML and analysis settings
 
 ## Quick Start
 
-### 1. Raspberry Pi Setup (Recording)
+### 1. Watcher Setup (Raspberry Pi)
 
 ```bash
+cd watcher/
+
 # Install system dependencies
 sudo apt install python3-picamera2 python3-opencv python3-pip python3-venv
 
@@ -47,106 +46,113 @@ source venv/bin/activate
 # Install Python dependencies
 pip install -r requirements.txt
 
+# Configure recording settings
+nano config.py
+
 # Start motion recording
 python main.py
 ```
 
-### 2. Server Setup (Analysis)
+### 2. Inspector Setup (Server)
 
 ```bash
+cd inspector/
+
 # Install pipenv
 pip3 install --user pipenv
 
 # Install ML dependencies
 pipenv install
 
+# Configure analysis settings
+nano config.py
+
 # Test installation
 pipenv run test-yolo
 
-# Transfer clips from RPi and analyze
-scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/recorded_clips/ ./
+# Transfer clips from Watcher and analyze
+scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/watcher/recorded_clips/ ./
 pipenv run analyze-clips
 ```
 
-## Detailed Setup
+## Configuration
 
-### Raspberry Pi Configuration
-
-Edit `config.py` to adjust recording settings:
-
+### Watcher Configuration (`watcher/config.py`)
 ```python
-# Recording times
+# Recording schedule
 RECORDING_START_TIME = "08:00"  # 8 AM
 RECORDING_END_TIME = "18:00"    # 6 PM
 
-# Motion detection
-MOTION_THRESHOLD = 80
-MIN_MOTION_AREA = 1500
+# Motion detection sensitivity
+MOTION_THRESHOLD = 80           # Higher = less sensitive
+MIN_MOTION_AREA = 1500          # Minimum area to trigger
 
-# Storage
+# Storage settings
 STORAGE_DIR = "recorded_clips"
 CLIP_RETENTION_DAYS = 7
 ```
 
-### Server Configuration
+### Inspector Configuration (`inspector/config.py`)
+```python
+# YOLO model settings
+MODEL_SIZE = 'n'                # n=nano, s=small, m=medium, l=large
+CONFIDENCE_THRESHOLD = 0.5      # Minimum confidence for detection
 
-See `server_setup.md` for detailed server setup instructions.
-
-## Usage
-
-### Phase 1: Motion Recording (Raspberry Pi)
-```bash
-# Start recording system
-python main.py
+# Processing settings
+SAMPLE_FRAMES = 10              # Frames to sample per video
+INPUT_SIZE = (640, 640)         # YOLO input size
 ```
-
-### Phase 2: Car Detection (Server)
-```bash
-# Transfer clips from RPi
-scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/recorded_clips/ ./
-
-# Analyze with YOLOv8
-pipenv run analyze-clips
-```
-
-### Phase 3: Manual Review
-Review clips in organized directories:
-- `recorded_clips_organized/with_cars/` - Clips containing cars
-- `recorded_clips_organized/no_cars/` - Clips without cars
 
 ## File Transfer Options
 
 ### Option 1: Manual SCP
 ```bash
-scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/recorded_clips/ ./
+scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/watcher/recorded_clips/ ./inspector/
 ```
 
 ### Option 2: Network Share
 ```bash
-# Copy to NAS from RPi
-cp recorded_clips/*.mp4 /mnt/nas/ddd_clips/
+# Copy to NAS from Watcher
+cp watcher/recorded_clips/*.mp4 /mnt/nas/ddd_clips/
 
-# Copy from NAS to server
-cp /mnt/nas/ddd_clips/*.mp4 ./recorded_clips/
+# Copy from NAS to Inspector
+cp /mnt/nas/ddd_clips/*.mp4 ./inspector/
 ```
 
 ### Option 3: Automated Script
-Create `transfer_clips.sh` for automatic transfer:
 ```bash
-rsync -avz --remove-source-files \
-  user@raspberrypi-ddd.local:/home/tobi/ddd/recorded_clips/ \
-  ./recorded_clips/
+# Use the provided transfer script
+./transfer_clips.sh
 ```
+
+## Usage
+
+### Phase 1: Motion Recording (Watcher)
+```bash
+cd watcher/
+python main.py
+```
+
+### Phase 2: Car Detection (Inspector)
+```bash
+cd inspector/
+pipenv run analyze-clips
+```
+
+### Phase 3: Manual Review
+Review clips in organized directories:
+- `inspector/organized_clips/with_cars/` - Clips containing cars
+- `inspector/organized_clips/no_cars/` - Clips without cars
 
 ## Performance Notes
 
-### Raspberry Pi Optimization
+### Watcher Optimization
 - Lightweight dependencies only
 - Efficient motion detection
 - Automatic clip cleanup
 - Minimal resource usage
 
-### Server Optimization
+### Inspector Optimization
 - YOLOv8n model for speed
 - Configurable confidence thresholds
 - Frame sampling for efficiency
@@ -156,39 +162,35 @@ rsync -avz --remove-source-files \
 
 ### Testing Components
 
-**Raspberry Pi:**
+**Watcher:**
 ```bash
-# Test motion detection
+cd watcher/
 python test_motion_detection.py
-
-# Test camera
 python test_picamera2.py
 ```
 
-**Server:**
+**Inspector:**
 ```bash
-# Test YOLOv8
+cd inspector/
 pipenv run test-yolo
-
-# Test car detection
-pipenv run analyze-clips
+pipenv run python test_car_detection.py
 ```
 
 ### Adding Features
-1. Keep RPi side lightweight
-2. Add ML features to server side
+1. Keep Watcher side lightweight
+2. Add ML features to Inspector side
 3. Use file-based messaging between components
 4. Test on actual hardware
 
 ## Troubleshooting
 
-### Raspberry Pi Issues
+### Watcher Issues
 - **Camera not detected**: Check connections and permissions
-- **Motion detection issues**: Adjust thresholds in `config.py`
-- **Storage full**: Enable cleanup in `config.py`
+- **Motion detection issues**: Adjust thresholds in `watcher/config.py`
+- **Storage full**: Enable cleanup in `watcher/config.py`
 
-### Server Issues
-- **YOLOv8 installation**: See `server_setup.md`
+### Inspector Issues
+- **YOLOv8 installation**: See `inspector/server_setup.md`
 - **Memory issues**: Use smaller model or increase sampling
 - **Transfer issues**: Check network connectivity
 
@@ -196,17 +198,23 @@ pipenv run analyze-clips
 
 ```
 ddd/
-├── main.py                 # Motion recording (RPi)
-├── motion_detector.py      # Motion detection (RPi)
-├── video_recorder.py       # Video recording (RPi)
-├── config.py              # Configuration (shared)
-├── requirements.txt       # RPi dependencies
-├── Pipfile               # Server dependencies
-├── yolo_car_detector.py   # YOLOv8 detection (server)
-├── yolo_car_table.py      # Analysis script (server)
-├── server_setup.md        # Server setup guide
-├── recorded_clips/        # Video storage (shared)
-└── README.md             # This file
+├── watcher/                    # Recording & Motion Detection
+│   ├── main.py                # Motion recording (RPi)
+│   ├── motion_detector.py     # Motion detection (RPi)
+│   ├── video_recorder.py      # Video recording (RPi)
+│   ├── config.py              # Watcher configuration
+│   ├── requirements.txt       # RPi dependencies
+│   ├── recorded_clips/        # Video storage
+│   └── README.md              # Watcher documentation
+├── inspector/                  # ML Analysis & Car Detection
+│   ├── yolo_car_detector.py   # YOLOv8 detection (server)
+│   ├── yolo_car_table.py      # Analysis script (server)
+│   ├── config.py              # Inspector configuration
+│   ├── Pipfile               # Server dependencies
+│   ├── server_setup.md        # Server setup guide
+│   └── README.md              # Inspector documentation
+├── transfer_clips.sh          # File transfer utility
+└── README.md                  # This file
 ```
 
 ## License
@@ -215,8 +223,19 @@ This project is for research and educational purposes.
 
 ## Contributing
 
-1. Follow the lightweight RPi / heavy server architecture
+1. Follow the lightweight Watcher / heavy Inspector architecture
 2. Test on actual hardware
-3. Update documentation
+3. Update documentation in appropriate directories
 4. Use file-based messaging between components
+
+# Watcher (Raspberry Pi)
+cd watcher/
+python main.py
+
+# Inspector (Server)
+cd inspector/
+pipenv run analyze-clips
+
+# Transfer clips
+./transfer_clips.sh
 

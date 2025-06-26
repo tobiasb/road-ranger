@@ -1,5 +1,5 @@
 """
-Motion detection module using OpenCV and Picamera2
+Motion detection module for the Distracted Driving Detector
 """
 
 import cv2

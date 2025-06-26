@@ -3,12 +3,16 @@
 Test script for car detection functionality
 """
 
-import cv2
-import numpy as np
 import os
 import sys
-from car_detector import CarDetector
+import cv2
+import numpy as np
+import time
+import argparse
+from pathlib import Path
 import config
+from car_detector import CarDetector
+from yolo_car_detector import YOLOCarDetector
 
 
 def test_car_detection_on_sample():
@@ -35,7 +39,7 @@ def test_car_detection_on_sample():
     print(f"Testing with: {video_files[0]}")
 
     # Analyze the video
-    result = detector.analyze_video_clip(test_file, sample_frames=5)
+    result = detector.analyze_video_clip(test_file, sample_frames=config.SAMPLE_FRAMES)
 
     if "error" in result:
         print(f"Error: {result['error']}")

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-Script to view and manually review clips that contain cars
+Interactive viewer for clips containing detected cars
 """
 
 import cv2
 import os
 import sys
-import json
+import argparse
 from pathlib import Path
+import json
 import config
 
 

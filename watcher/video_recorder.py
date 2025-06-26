@@ -1,15 +1,17 @@
 """
-Video recording module for capturing motion clips
+Video recording module for the Distracted Driving Detector
 """
 
 import cv2
+import os
+import time
+import logging
+from datetime import datetime
+import config
 import numpy as np
 import threading
-import time
-import os
 from typing import Optional, List
 from collections import deque
-import config
 from utils.time_utils import get_timestamp_string
 
 

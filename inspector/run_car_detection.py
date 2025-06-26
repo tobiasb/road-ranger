@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to run car detection on all recorded video clips
+Script to run car detection on all video clips
 """
 
 import logging
@@ -8,6 +8,7 @@ import sys
 import os
 from car_detector import CarDetector
 import config
+from yolo_car_detector import YOLOCarDetector
 
 
 def setup_logging():

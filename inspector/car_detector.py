@@ -1,5 +1,5 @@
 """
-Car detection module using OpenCV's HOG car detector
+Car detection module using various computer vision techniques
 """
 
 import cv2

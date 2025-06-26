@@ -1,5 +1,5 @@
 """
-Configuration settings for the Distracted Driving Detector
+Configuration settings for the Watcher (recording side)
 """
 
 # Time-based recording settings
