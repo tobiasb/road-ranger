@@ -93,7 +93,7 @@ class VideoRecorder:
         filename = f"{config.CLIP_NAME_FORMAT.format(timestamp=timestamp, duration=duration_str)}.{config.CLIP_FORMAT}"
         return os.path.join(config.STORAGE_DIR, filename)
 
-    def record_clip(self, frames: List[np.ndarray]) -> str:
+    def record_clip(self, frames: List[np.ndarray]) -> Optional[str]:
         """
         Record a clip from a list of frames
 
@@ -123,7 +123,8 @@ class VideoRecorder:
 
         try:
             for frame in frames:
-                writer.write(frame)
+                frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+                writer.write(frame_bgr)
         finally:
             writer.release()
 
