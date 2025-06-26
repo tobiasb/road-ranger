@@ -82,17 +82,14 @@ def main():
 
         results = detector.process_all_clips()
 
-        # Print summary
+        # Print summary to console
         summary = detector.create_summary_report(results)
         print(summary)
 
-        # Save summary to file
+        # Save results to JSON file (analysis report)
         output_dir = f"{config.STORAGE_DIR}_organized"
-        summary_file = os.path.join(output_dir, "summary_report.txt")
-        with open(summary_file, 'w') as f:
-            f.write(summary)
-
-        logger.info(f"Summary report saved to {summary_file}")
+        results_file = os.path.join(output_dir, "analysis_results.json")
+        logger.info(f"Analysis results saved to {results_file}")
 
         if results.get("interrupted", False):
             logger.info("Processing was interrupted but progress was saved. You can resume by running the script again.")
