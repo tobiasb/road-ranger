@@ -105,7 +105,7 @@ def main():
 
     if not os.path.exists(organized_dir):
         print(f"Organized directory {organized_dir} does not exist!")
-        print("Please run car detection first using: python run_car_detection.py")
+        print("Please run car detection first using: pipenv run python run_car_detection.py")
         sys.exit(1)
 
     cars_dir = os.path.join(organized_dir, "with_cars")

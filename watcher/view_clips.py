@@ -118,10 +118,10 @@ def main():
     """Main entry point"""
     if len(sys.argv) < 2:
         print("Usage:")
-        print("  python view_clips.py list                    - List all clips")
-        print("  python view_clips.py play <filename>         - Play a specific clip")
-        print("  python view_clips.py delete <filename>       - Delete a specific clip")
-        print("  python view_clips.py cleanup                 - Clean up old clips")
+        print("  pipenv run python view_clips.py list                    - List all clips")
+        print("  pipenv run python view_clips.py play <filename>         - Play a specific clip")
+        print("  pipenv run python view_clips.py delete <filename>       - Delete a specific clip")
+        print("  pipenv run python view_clips.py cleanup                 - Clean up old clips")
         return
 
     command = sys.argv[1].lower()

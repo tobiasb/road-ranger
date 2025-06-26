@@ -4,9 +4,9 @@
 # Usage: ./transfer_clips.sh [watcher_host] [source_path] [dest_path]
 
 # Default values
-WATCHER_HOST=${1:-"user@raspberrypi-ddd.local"}
+WATCHER_HOST=${1:-"tobi@raspberrypi-ddd.local"}
 SOURCE_PATH=${2:-"/home/tobi/ddd/watcher/recorded_clips"}
-DEST_PATH=${3:-"./inspector"}
+DEST_PATH=${3:-"./downloaded_clips"}
 
 echo "🔄 Transferring clips from Watcher to Inspector..."
 echo "   From: $WATCHER_HOST:$SOURCE_PATH"
@@ -27,7 +27,6 @@ if [ $? -eq 0 ]; then
     echo "📁 Clips are now available in: $DEST_PATH"
     echo ""
     echo "🔍 Next steps:"
-    echo "   cd inspector/"
     echo "   pipenv run analyze-clips"
 else
     echo ""

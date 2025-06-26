@@ -74,7 +74,7 @@ def main():
 
     print("\n✓ All tests passed! YOLOv8 is ready to use.")
     print("\nYou can now run car detection with:")
-    print("python yolo_car_table.py")
+    print("pipenv run python yolo_car_table.py")
 
 if __name__ == "__main__":
     main()

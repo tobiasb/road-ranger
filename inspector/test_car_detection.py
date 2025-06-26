@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test script for car detection functionality
+Test script for YOLOv8 car detection functionality
 """
 
 import os
@@ -11,16 +11,15 @@ import time
 import argparse
 from pathlib import Path
 import config
-from car_detector import CarDetector
 from yolo_car_detector import YOLOCarDetector
 
 
-def test_car_detection_on_sample():
-    """Test car detection on a sample video clip"""
-    print("Testing car detection...")
+def test_yolo_detection_on_sample():
+    """Test YOLO car detection on a sample video clip"""
+    print("Testing YOLOv8 car detection...")
 
     # Initialize detector
-    detector = CarDetector()
+    detector = YOLOCarDetector(model_size=config.MODEL_SIZE)
 
     # Check if we have any video files to test with
     if not os.path.exists(config.STORAGE_DIR):
@@ -53,13 +52,15 @@ def test_car_detection_on_sample():
     print(f"  Car ratio: {result['car_ratio']:.2f}")
     print(f"  Has cars: {result['has_cars']}")
     print(f"  Total detections: {result['total_car_detections']}")
+    print(f"  Detection method: {result['detection_method']}")
+    print(f"  Confidence threshold: {result['confidence_threshold']}")
 
     return True
 
 
 def test_frame_detection():
-    """Test car detection on a single frame"""
-    print("\nTesting frame-level car detection...")
+    """Test YOLO car detection on a single frame"""
+    print("\nTesting frame-level YOLO car detection...")
 
     # Create a simple test frame (you could also load an actual image)
     test_frame = np.zeros((480, 640, 3), dtype=np.uint8)
@@ -67,42 +68,71 @@ def test_frame_detection():
     # Add a simple rectangle to simulate a car (this won't be detected as a real car)
     cv2.rectangle(test_frame, (200, 200), (400, 300), (255, 255, 255), -1)
 
-    detector = CarDetector()
+    detector = YOLOCarDetector(model_size=config.MODEL_SIZE)
     detections = detector.detect_cars_in_frame(test_frame)
 
     print(f"Detections in test frame: {len(detections)}")
-    for i, (x, y, w, h, conf) in enumerate(detections):
-        print(f"  Detection {i+1}: ({x}, {y}, {w}, {h}) confidence={conf:.2f}")
+    for i, detection in enumerate(detections):
+        bbox = detection['bbox']
+        confidence = detection['confidence']
+        print(f"  Detection {i+1}: {bbox} confidence={confidence:.2f}")
 
     return True
 
 
-def test_cascade_loading():
-    """Test if the car cascade classifier loads correctly"""
-    print("\nTesting cascade classifier loading...")
+def test_yolo_model_loading():
+    """Test if the YOLO model loads correctly"""
+    print("\nTesting YOLO model loading...")
 
-    # Test the car detector initialization
-    detector = CarDetector()
+    try:
+        # Test the YOLO detector initialization
+        detector = YOLOCarDetector(model_size=config.MODEL_SIZE)
+        print(f"✓ YOLOv8{config.MODEL_SIZE} model loaded successfully")
+        print(f"✓ Confidence threshold: {detector.confidence_threshold}")
+        print(f"✓ Car class ID: {detector.car_class_id}")
+        return True
+    except Exception as e:
+        print(f"✗ Failed to load YOLO model: {e}")
+        return False
 
-    if detector.car_cascade is not None:
-        print("✓ Cascade classifier loaded successfully")
-        return True
-    else:
-        print("✗ Cascade classifier not available, using simple detection")
-        print("✓ Simple detection method available as fallback")
-        return True
+
+def test_performance():
+    """Test YOLO detection performance"""
+    print("\nTesting YOLO detection performance...")
+
+    detector = YOLOCarDetector(model_size=config.MODEL_SIZE)
+
+    # Create a test frame
+    test_frame = np.random.randint(0, 255, (640, 640, 3), dtype=np.uint8)
+
+    # Time the detection
+    start_time = time.time()
+    detections = detector.detect_cars_in_frame(test_frame)
+    end_time = time.time()
+
+    processing_time = (end_time - start_time) * 1000  # Convert to milliseconds
+    print(f"✓ Frame processing time: {processing_time:.1f}ms")
+    print(f"✓ Detections found: {len(detections)}")
+
+    return True
 
 
 def main():
     """Main test function"""
-    print("Car Detection Test Suite")
-    print("========================")
+    parser = argparse.ArgumentParser(description='Test YOLOv8 car detection')
+    parser.add_argument('--model-size', choices=['n', 's', 'm', 'l', 'x'], default=config.MODEL_SIZE,
+                       help=f'YOLO model size to test (default: {config.MODEL_SIZE})')
+    args = parser.parse_args()
 
-    # Test 1: Cascade loading
-    if test_cascade_loading():
-        print("✓ Cascade loading test passed")
+    print("YOLOv8 Car Detection Test Suite")
+    print("===============================")
+    print(f"Testing with model: yolov8{args.model_size}")
+
+    # Test 1: Model loading
+    if test_yolo_model_loading():
+        print("✓ Model loading test passed")
     else:
-        print("✗ Cascade loading test failed")
+        print("✗ Model loading test failed")
         return
 
     # Test 2: Frame-level detection
@@ -111,8 +141,14 @@ def main():
     else:
         print("✗ Frame detection test failed")
 
-    # Test 3: Video clip analysis
-    if test_car_detection_on_sample():
+    # Test 3: Performance
+    if test_performance():
+        print("✓ Performance test passed")
+    else:
+        print("✗ Performance test failed")
+
+    # Test 4: Video clip analysis
+    if test_yolo_detection_on_sample():
         print("✓ Video analysis test passed")
     else:
         print("✗ Video analysis test failed")

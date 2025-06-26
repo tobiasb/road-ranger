@@ -36,7 +36,7 @@ Pipfile.lock
 *.swo
 
 # Project specific
-recorded_clips/
+**/*_clips*/
 *.mp4
 *.avi
 *.mov
@@ -46,3 +46,5 @@ recorded_clips/
 Thumbs.db
 
 *.log
+
+yolo*.pt

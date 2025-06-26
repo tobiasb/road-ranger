@@ -7,6 +7,8 @@ import numpy as np
 import os
 import json
 import logging
+import signal
+import sys
 from typing import List, Tuple, Dict, Optional
 from pathlib import Path
 import config
@@ -183,7 +185,9 @@ class YOLOCarDetector:
 
     def process_all_clips(self, input_dir: str = None, output_dir: str = None) -> Dict:
         """
-        Process all video clips in the input directory and organize them by car detection results
+        Process all video clips in the input directory and organize them by car detection results.
+        This method is idempotent - files already processed will be skipped.
+        Supports graceful shutdown with Ctrl-C.
 
         Args:
             input_dir: Directory containing video clips (defaults to config.STORAGE_DIR)
@@ -191,6 +195,28 @@ class YOLOCarDetector:
 
         Returns:
             Dictionary with processing results
+        """
+        # Setup graceful shutdown
+        self.shutdown_requested = False
+
+        def signal_handler(signum, frame):
+            self.logger.info("Shutdown signal received. Saving progress and shutting down gracefully...")
+            self.shutdown_requested = True
+
+        # Register signal handlers
+        original_sigint = signal.signal(signal.SIGINT, signal_handler)
+        original_sigterm = signal.signal(signal.SIGTERM, signal_handler)
+
+        try:
+            return self._process_all_clips_internal(input_dir, output_dir)
+        finally:
+            # Restore original signal handlers
+            signal.signal(signal.SIGINT, original_sigint)
+            signal.signal(signal.SIGTERM, original_sigterm)
+
+    def _process_all_clips_internal(self, input_dir: str = None, output_dir: str = None) -> Dict:
+        """
+        Internal implementation of process_all_clips with graceful shutdown support
         """
         if input_dir is None:
             input_dir = config.STORAGE_DIR
@@ -204,29 +230,81 @@ class YOLOCarDetector:
         os.makedirs(cars_dir, exist_ok=True)
         os.makedirs(no_cars_dir, exist_ok=True)
 
-        # Find all video files
+        # Find all video files in input directory
         video_extensions = ['.mp4', '.avi', '.mov', '.mkv']
-        video_files = []
+        input_video_files = []
 
         for file in os.listdir(input_dir):
             if any(file.lower().endswith(ext) for ext in video_extensions):
-                video_files.append(os.path.join(input_dir, file))
+                input_video_files.append(os.path.join(input_dir, file))
 
-        self.logger.info(f"Found {len(video_files)} video files to process")
+        # Find already processed files (files that exist in organized directories)
+        processed_files = set()
+        for file in os.listdir(cars_dir):
+            if any(file.lower().endswith(ext) for ext in video_extensions):
+                processed_files.add(file)
+        for file in os.listdir(no_cars_dir):
+            if any(file.lower().endswith(ext) for ext in video_extensions):
+                processed_files.add(file)
+
+        # Files to process are all files in input directory (since processed files are moved out)
+        files_to_process = input_video_files
+
+        self.logger.info(f"Found {len(input_video_files)} video files in input directory")
+        self.logger.info(f"Already processed (in organized dirs): {len(processed_files)} files")
+        self.logger.info(f"Files to process: {len(files_to_process)} files")
+
+        if not files_to_process:
+            self.logger.info("No new files to process!")
+            # Load existing results if available
+            results_file = os.path.join(output_dir, "analysis_results.json")
+            if os.path.exists(results_file):
+                with open(results_file, 'r') as f:
+                    return json.load(f)
+            else:
+                # Create empty results structure
+                return {
+                    "total_clips": len(processed_files),
+                    "with_cars": len([f for f in os.listdir(cars_dir) if any(f.lower().endswith(ext) for ext in video_extensions)]),
+                    "no_cars": len([f for f in os.listdir(no_cars_dir) if any(f.lower().endswith(ext) for ext in video_extensions)]),
+                    "errors": 0,
+                    "processed_clips": [],
+                    "detection_method": f"yolov8{self.model_size}",
+                    "confidence_threshold": self.confidence_threshold,
+                    "status": "no_new_files_to_process"
+                }
 
         results = {
-            "total_clips": len(video_files),
-            "with_cars": 0,
-            "no_cars": 0,
+            "total_clips": len(processed_files) + len(files_to_process),  # Total = already processed + new files
+            "with_cars": len([f for f in os.listdir(cars_dir) if any(f.lower().endswith(ext) for ext in video_extensions)]),
+            "no_cars": len([f for f in os.listdir(no_cars_dir) if any(f.lower().endswith(ext) for ext in video_extensions)]),
             "errors": 0,
             "processed_clips": [],
             "detection_method": f"yolov8{self.model_size}",
-            "confidence_threshold": self.confidence_threshold
+            "confidence_threshold": self.confidence_threshold,
+            "newly_processed": 0,
+            "interrupted": False
         }
 
-        # Process each video file
-        for i, video_path in enumerate(video_files):
-            self.logger.info(f"Processing {i+1}/{len(video_files)}: {os.path.basename(video_path)}")
+        # Load existing processed clips if results file exists
+        results_file = os.path.join(output_dir, "analysis_results.json")
+        if os.path.exists(results_file):
+            try:
+                with open(results_file, 'r') as f:
+                    existing_results = json.load(f)
+                    results["processed_clips"] = existing_results.get("processed_clips", [])
+            except Exception as e:
+                self.logger.warning(f"Could not load existing results: {e}")
+
+        # Process each video file that hasn't been processed yet
+        for i, video_path in enumerate(files_to_process):
+            # Check for shutdown request
+            if self.shutdown_requested:
+                self.logger.info(f"Processing interrupted at file {i+1}/{len(files_to_process)}: {os.path.basename(video_path)}")
+                results["interrupted"] = True
+                break
+
+            self.logger.info(f"Processing {i+1}/{len(files_to_process)}: {os.path.basename(video_path)}")
 
             try:
                 analysis = self.analyze_video_clip(video_path)
@@ -236,7 +314,7 @@ class YOLOCarDetector:
                     self.logger.error(f"Error processing {video_path}: {analysis['error']}")
                     continue
 
-                # Copy file to appropriate directory
+                # Move file to appropriate directory
                 filename = os.path.basename(video_path)
                 if analysis["has_cars"]:
                     dest_path = os.path.join(cars_dir, filename)
@@ -245,26 +323,43 @@ class YOLOCarDetector:
                     dest_path = os.path.join(no_cars_dir, filename)
                     results["no_cars"] += 1
 
-                # Copy the file
+                # Move the file (not copy)
                 import shutil
-                shutil.copy2(video_path, dest_path)
+                shutil.move(video_path, dest_path)
 
                 # Store analysis results
                 results["processed_clips"].append(analysis)
+                results["newly_processed"] += 1
+
+                # Save progress periodically (every 10 files)
+                if (i + 1) % 10 == 0:
+                    self._save_progress(results, results_file)
 
             except Exception as e:
                 results["errors"] += 1
                 self.logger.error(f"Exception processing {video_path}: {e}")
 
-        # Save detailed results to JSON file
-        results_file = os.path.join(output_dir, "analysis_results.json")
-        with open(results_file, 'w') as f:
-            json.dump(results, f, indent=2, default=str)
+        # Save final results to JSON file
+        self._save_progress(results, results_file)
 
-        self.logger.info(f"Processing complete. Results saved to {results_file}")
+        if results["interrupted"]:
+            self.logger.info(f"Processing interrupted. Progress saved. Processed {results['newly_processed']} new files.")
+        else:
+            self.logger.info(f"Processing complete. Results saved to {results_file}")
+
         self.logger.info(f"Summary: {results['with_cars']} clips with cars, {results['no_cars']} clips without cars")
+        if results["newly_processed"] > 0:
+            self.logger.info(f"Newly processed: {results['newly_processed']} clips")
 
         return results
+
+    def _save_progress(self, results: Dict, results_file: str):
+        """Save current progress to JSON file"""
+        try:
+            with open(results_file, 'w') as f:
+                json.dump(results, f, indent=2, default=str)
+        except Exception as e:
+            self.logger.error(f"Failed to save progress: {e}")
 
     def create_summary_report(self, results: Dict) -> str:
         """
@@ -276,6 +371,15 @@ class YOLOCarDetector:
         Returns:
             Formatted summary string
         """
+        # Check if this was an idempotent run or interrupted
+        status_info = ""
+        if results.get("status") == "no_new_files_to_process":
+            status_info = "\nStatus: No new files to process (idempotent run)"
+        elif results.get("interrupted", False):
+            status_info = f"\nStatus: Processing was interrupted (Ctrl-C). Progress saved."
+        elif results.get("newly_processed", 0) > 0:
+            status_info = f"\nNewly processed: {results['newly_processed']} clips"
+
         summary = f"""
 YOLOv8 Car Detection Analysis Summary
 ====================================
@@ -283,10 +387,10 @@ YOLOv8 Car Detection Analysis Summary
 Detection Method: {results.get('detection_method', 'Unknown')}
 Confidence Threshold: {results.get('confidence_threshold', 'Unknown')}
 
-Total clips processed: {results['total_clips']}
+Total clips found: {results['total_clips']}
 Clips with cars: {results['with_cars']}
 Clips without cars: {results['no_cars']}
-Errors: {results['errors']}
+Errors: {results['errors']}{status_info}
 
 Success rate: {((results['with_cars'] + results['no_cars']) / results['total_clips'] * 100):.1f}%
 
@@ -302,5 +406,7 @@ Performance Notes:
 - Using YOLOv8{self.model_size} model for detection
 - Confidence threshold: {self.confidence_threshold}
 - Minimum frames with cars: {self.min_car_frames}
+- System is idempotent - re-running will only process new files
+- Supports graceful shutdown with Ctrl-C - progress is saved automatically
 """
         return summary

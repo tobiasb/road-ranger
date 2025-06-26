@@ -53,7 +53,7 @@ pipenv shell
 pipenv run test-yolo
 
 # Or manually
-python test_yolo_installation.py
+pipenv run python test_yolo_installation.py
 ```
 
 ## Usage
@@ -75,10 +75,10 @@ pipenv run process-all
 pipenv shell
 
 # Run car detection
-python yolo_car_table.py
+pipenv run python yolo_car_table.py
 
 # Run full processing
-python run_car_detection.py
+pipenv run python run_car_detection.py
 ```
 
 ## File Transfer from Raspberry Pi
