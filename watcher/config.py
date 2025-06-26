@@ -8,9 +8,9 @@ RECORDING_END_TIME = "18:00"    # 6 PM
 
 # Camera settings
 CAMERA_INDEX = 0  # Default camera (usually webcam)
-FRAME_WIDTH = 640
-FRAME_HEIGHT = 480
-FPS = 30
+FRAME_WIDTH = 1920  # Increased from 640 for higher quality
+FRAME_HEIGHT = 1080  # Increased from 480 for higher quality
+FPS = 60
 
 # Motion detection settings
 MOTION_THRESHOLD = 80  # Sensitivity threshold for motion detection (higher = less sensitive)

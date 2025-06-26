@@ -20,12 +20,13 @@ class YOLOCarDetector:
     Detects cars in video clips using YOLOv8
     """
 
-    def __init__(self, model_size: str = None):
+    def __init__(self, model_size: str = None, no_move: bool = False):
         """
         Initialize YOLO car detector
 
         Args:
             model_size: Model size ('n'=nano, 's'=small, 'm'=medium, 'l'=large)
+            no_move: If True, don't move files to organized directories
         """
         # Setup logging
         self.logger = logging.getLogger(__name__)
@@ -43,7 +44,12 @@ class YOLOCarDetector:
         self.input_size = (640, 640)  # YOLO default input size
         self.sample_rate = 3  # Process every 3rd frame for speed
 
+        # File movement control
+        self.no_move = no_move
+
         self.logger.info(f"YOLO car detector initialized with model: yolov8{self.model_size}")
+        if self.no_move:
+            self.logger.info("File movement disabled - files will not be moved to organized directories")
 
     def _load_yolo_model(self) -> YOLO:
         """Load YOLO model"""
@@ -238,17 +244,35 @@ class YOLOCarDetector:
             if any(file.lower().endswith(ext) for ext in video_extensions):
                 input_video_files.append(os.path.join(input_dir, file))
 
-        # Find already processed files (files that exist in organized directories)
+        # Find already processed files
         processed_files = set()
-        for file in os.listdir(cars_dir):
-            if any(file.lower().endswith(ext) for ext in video_extensions):
-                processed_files.add(file)
-        for file in os.listdir(no_cars_dir):
-            if any(file.lower().endswith(ext) for ext in video_extensions):
-                processed_files.add(file)
+        if self.no_move:
+            # When no_move is enabled, check the results file to see which files were already processed
+            results_file = os.path.join(output_dir, "analysis_results.json")
+            if os.path.exists(results_file):
+                try:
+                    with open(results_file, 'r') as f:
+                        existing_results = json.load(f)
+                        for clip in existing_results.get("processed_clips", []):
+                            if "video_path" in clip:
+                                processed_files.add(os.path.basename(clip["video_path"]))
+                except Exception as e:
+                    self.logger.warning(f"Could not load existing results: {e}")
+        else:
+            # When files are moved, check organized directories
+            for file in os.listdir(cars_dir):
+                if any(file.lower().endswith(ext) for ext in video_extensions):
+                    processed_files.add(file)
+            for file in os.listdir(no_cars_dir):
+                if any(file.lower().endswith(ext) for ext in video_extensions):
+                    processed_files.add(file)
 
-        # Files to process are all files in input directory (since processed files are moved out)
-        files_to_process = input_video_files
+        # Files to process are files in input directory that haven't been processed yet
+        files_to_process = []
+        for video_path in input_video_files:
+            filename = os.path.basename(video_path)
+            if filename not in processed_files:
+                files_to_process.append(video_path)
 
         self.logger.info(f"Found {len(input_video_files)} video files in input directory")
         self.logger.info(f"Already processed (in organized dirs): {len(processed_files)} files")
@@ -323,9 +347,13 @@ class YOLOCarDetector:
                     dest_path = os.path.join(no_cars_dir, filename)
                     results["no_cars"] += 1
 
-                # Move the file (not copy)
-                import shutil
-                shutil.move(video_path, dest_path)
+                # Move the file (not copy) unless no_move is enabled
+                if not self.no_move:
+                    import shutil
+                    shutil.move(video_path, dest_path)
+                    self.logger.info(f"Moved {filename} to {'with_cars' if analysis['has_cars'] else 'no_cars'} directory")
+                else:
+                    self.logger.info(f"Analysis complete for {filename}: has_cars={analysis['has_cars']} (file not moved)")
 
                 # Store analysis results
                 results["processed_clips"].append(analysis)
@@ -380,12 +408,17 @@ class YOLOCarDetector:
         elif results.get("newly_processed", 0) > 0:
             status_info = f"\nNewly processed: {results['newly_processed']} clips"
 
+        # Add no_move mode info
+        mode_info = ""
+        if self.no_move:
+            mode_info = "\nMode: Evaluation mode (files not moved to organized directories)"
+
         summary = f"""
 YOLOv8 Car Detection Analysis Summary
 ====================================
 
 Detection Method: {results.get('detection_method', 'Unknown')}
-Confidence Threshold: {results.get('confidence_threshold', 'Unknown')}
+Confidence Threshold: {results.get('confidence_threshold', 'Unknown')}{mode_info}
 
 Total clips found: {results['total_clips']}
 Clips with cars: {results['with_cars']}
@@ -395,11 +428,11 @@ Errors: {results['errors']}{status_info}
 Success rate: {((results['with_cars'] + results['no_cars']) / results['total_clips'] * 100):.1f}%
 
 Manual Review Required:
-- Review {results['with_cars']} clips in the 'with_cars' directory
+- Review {results['with_cars']} clips{(' in the \'with_cars\' directory' if not self.no_move else ' (files remain in original location)')}
 - These clips likely contain cars and need driver/distraction analysis
 
 Clips can be safely ignored:
-- {results['no_cars']} clips in the 'no_cars' directory
+- {results['no_cars']} clips{(' in the \'no_cars\' directory' if not self.no_move else ' (files remain in original location)')}
 - These clips don't contain cars and can be deleted or ignored
 
 Performance Notes:

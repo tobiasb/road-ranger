@@ -42,6 +42,8 @@ def main():
                        help=f'YOLO model size (default: {config.MODEL_SIZE})')
     parser.add_argument('--force-reprocess', action='store_true',
                        help='Force reprocessing of all files (default: skip already processed files)')
+    parser.add_argument('--no-move', action='store_true',
+                       help='Do not move files to organized directories (useful for evaluation)')
     args = parser.parse_args()
 
     setup_logging()
@@ -68,7 +70,7 @@ def main():
     logger.info(f"Found {len(video_files)} video files to analyze")
 
     # Initialize YOLO car detector
-    detector = YOLOCarDetector(model_size=args.model_size)
+    detector = YOLOCarDetector(model_size=args.model_size, no_move=args.no_move)
 
     # Process all clips
     try:
