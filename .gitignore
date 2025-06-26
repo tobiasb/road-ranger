@@ -48,3 +48,5 @@ Thumbs.db
 *.log
 
 yolo*.pt
+
+inspector/server.[lock|pid]
