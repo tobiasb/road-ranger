@@ -24,17 +24,12 @@ The Watcher system:
 # Run the automated setup script
 ./setup.sh
 
-# Activate the virtual environment
-source venv/bin/activate
-
 # Start the watcher
-python main.py
+python3 main.py
 ```
 
 The setup script will:
-- Install system dependencies (picamera2, opencv, etc.)
-- Create a virtual environment
-- Install Python dependencies
+- Install system dependencies (picamera2, opencv, numpy, etc.)
 - Test the installation
 - Set up storage directories
 
@@ -80,23 +75,41 @@ Automated installation script that handles all dependencies.
 
 ```bash
 # Test motion detection
-python test_motion_detection.py
+python3 test_motion_detection.py
 
 # Test camera functionality
-python test_picamera2.py
+python3 test_picamera2.py
 
 # Debug motion detection
-python debug_motion.py
+python3 debug_motion.py
 ```
+
+## Camera Streaming
+
+For remote viewing and camera setup:
+
+```bash
+# Start camera stream (accessible via web browser)
+python3 camera_streamer.py
+
+# Access stream at: http://raspberrypi-ddd.local:8080
+# Or: http://[your-pi-ip]:8080
+```
+
+The camera streamer provides:
+- Real-time camera feed in web browser
+- High resolution for camera calibration
+- Auto-refresh functionality
+- Useful for positioning and testing camera setup
 
 ## Viewing Recordings
 
 ```bash
 # View all recorded clips
-python view_clips.py
+python3 view_clips.py
 
 # View clips in a specific directory
-python view_clips.py /path/to/clips
+python3 view_clips.py /path/to/clips
 ```
 
 ## File Transfer
@@ -118,11 +131,11 @@ rsync -avz --remove-source-files \
 ### Installation Issues
 - **Setup script fails**: Make sure you're not running as root, the script will use sudo when needed
 - **Picamera2 not found**: Run `./setup.sh` to install system dependencies
-- **Virtual environment issues**: The setup script handles this automatically
+- **Python packages not found**: Run `./setup.sh` to install all required system packages
 
 ### Camera Issues
 - Check camera connections and permissions
-- Verify `picamera2` installation with `python test_picamera2.py`
+- Verify `picamera2` installation with `python3 test_picamera2.py`
 - Ensure camera is enabled in `raspi-config`
 
 ### Motion Detection Issues
@@ -160,7 +173,5 @@ This design ensures the system can run continuously without manual intervention 
 - `python3-numpy` - Numerical computing
 - `python3-dateutil` - Date/time utilities
 - `python3-pil` - Image processing (Pillow)
-- `python3-pip` - Package manager
-- `python3-venv` - Virtual environment
 
 **Note**: All dependencies are installed automatically by the setup script via the system package manager (apt). This is required due to externally managed environment restrictions on Raspberry Pi.

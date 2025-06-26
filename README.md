@@ -39,11 +39,8 @@ cd watcher/
 # Run the automated setup script
 ./setup.sh
 
-# Activate the virtual environment
-source venv/bin/activate
-
 # Start motion recording
-python main.py
+python3 main.py
 ```
 
 ### 2. Inspector Setup (Server)
@@ -123,7 +120,7 @@ cp /mnt/nas/ddd_clips/*.mp4 ./inspector/
 ### Phase 1: Motion Recording (Watcher)
 ```bash
 cd watcher/
-python main.py
+python3 main.py
 ```
 
 ### Phase 2: Car Detection (Inspector)
@@ -158,8 +155,8 @@ Review clips in organized directories:
 **Watcher:**
 ```bash
 cd watcher/
-python test_motion_detection.py
-python test_picamera2.py
+python3 test_motion_detection.py
+python3 test_picamera2.py
 ```
 
 **Inspector:**
@@ -223,7 +220,7 @@ This project is for research and educational purposes.
 
 # Watcher (Raspberry Pi)
 cd watcher/
-python main.py
+python3 main.py
 
 # Inspector (Server)
 cd inspector/
