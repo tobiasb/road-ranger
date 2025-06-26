@@ -15,8 +15,9 @@ python_version = "3.9"
 
 [scripts]
 test-yolo = "python test_yolo_installation.py"
+test-database = "python test_database.py"
 analyze-clips = "python run_car_detection.py"
-view-clips = "python view_car_clips.py"
+view-clips = "python view_car_clips_db.py"
 test-detection = "python test_car_detection.py"
-car-table = "python car_clip_table.py"
-force-reprocess = "python run_car_detection.py --force-reprocess"
+car-table = "python car_clip_table_db.py"
+force-reprocess = "python run_car_detection.py --force"

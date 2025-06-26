@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-Script to run car detection on all video clips using YOLOv8
+Main script to run YOLOv8 car detection on video clips
 """
 
-import logging
-import sys
 import os
-import argparse
+import sys
+import logging
 import signal
-import config
+import argparse
 from yolo_car_detector import YOLOCarDetector
+import config
 
 
 def setup_logging():
@@ -18,7 +18,7 @@ def setup_logging():
         level=getattr(logging, config.LOG_LEVEL),
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler('car_detection.log'),
+            logging.FileHandler('yolo_car_detection.log'),
             logging.StreamHandler()
         ]
     )
@@ -26,8 +26,7 @@ def setup_logging():
 
 def signal_handler(signum, frame):
     """Handle shutdown signals gracefully"""
-    logger = logging.getLogger(__name__)
-    logger.info("Shutdown signal received in main script. Exiting gracefully...")
+    print("\nShutdown signal received. Exiting gracefully...")
     sys.exit(0)
 
 
@@ -42,10 +41,6 @@ def main():
                        help=f'YOLO model size (default: {config.MODEL_SIZE})')
     parser.add_argument('--source-dir', type=str, default=config.STORAGE_DIR,
                        help=f'Source directory containing video clips (default: {config.STORAGE_DIR})')
-    parser.add_argument('--dest-dir', type=str, default=None,
-                       help='Destination directory for organized results (default: source_dir + "_organized")')
-    parser.add_argument('--no-move', action='store_true',
-                       help='Do not move files to organized directories (useful for evaluation)')
     parser.add_argument('--force', action='store_true',
                        help='Force reprocessing of files even if they have already been analyzed')
     args = parser.parse_args()
@@ -53,14 +48,10 @@ def main():
     setup_logging()
     logger = logging.getLogger(__name__)
 
-    # Set destination directory if not provided
-    if args.dest_dir is None:
-        args.dest_dir = f"{args.source_dir}_organized"
-
     logger.info(f"Starting YOLOv8 car detection analysis using model size: {args.model_size}")
     logger.info(f"Source directory: {args.source_dir}")
-    logger.info(f"Destination directory: {args.dest_dir}")
-    logger.info("Press Ctrl-C to stop processing gracefully (progress will be saved)")
+    logger.info(f"Database: {config.DATABASE_PATH}")
+    logger.info("Press Ctrl-C to stop processing gracefully (progress will be saved to database)")
 
     # Check if input directory exists
     if not os.path.exists(args.source_dir):
@@ -90,30 +81,25 @@ def main():
     logger.info(f"Found {len(video_files)} video files to analyze")
 
     # Initialize YOLO car detector
-    detector = YOLOCarDetector(model_size=args.model_size, no_move=args.no_move, force=args.force)
-
-    # Track files processed in this run to prevent duplicates
-    processed_in_this_run = set()
+    detector = YOLOCarDetector(model_size=args.model_size, force=args.force)
 
     # Process all clips
     try:
-        results = detector.process_all_clips(input_dir=args.source_dir, output_dir=args.dest_dir)
+        results = detector.process_all_clips(input_dir=args.source_dir)
 
         # Print summary to console
         summary = detector.create_summary_report(results)
         print(summary)
 
-        # Save results to JSON file (analysis report)
-        results_file = os.path.join(args.dest_dir, "analysis_results.json")
-        logger.info(f"Analysis results saved to {results_file}")
+        logger.info(f"Analysis results saved to database: {config.DATABASE_PATH}")
 
         if results.get("interrupted", False):
-            logger.info("Processing was interrupted but progress was saved. You can resume by running the script again.")
+            logger.info("Processing was interrupted but progress was saved to database. You can resume by running the script again.")
         else:
             logger.info("Car detection analysis complete!")
 
     except KeyboardInterrupt:
-        logger.info("Processing interrupted by user (Ctrl-C). Progress should have been saved.")
+        logger.info("Processing interrupted by user (Ctrl-C). Progress should have been saved to database.")
         sys.exit(0)
     except Exception as e:
         logger.error(f"Error during car detection: {e}")
