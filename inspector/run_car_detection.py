@@ -46,6 +46,8 @@ def main():
                        help='Destination directory for organized results (default: source_dir + "_organized")')
     parser.add_argument('--no-move', action='store_true',
                        help='Do not move files to organized directories (useful for evaluation)')
+    parser.add_argument('--force', action='store_true',
+                       help='Force reprocessing of files even if they have already been analyzed')
     args = parser.parse_args()
 
     setup_logging()
@@ -88,7 +90,7 @@ def main():
     logger.info(f"Found {len(video_files)} video files to analyze")
 
     # Initialize YOLO car detector
-    detector = YOLOCarDetector(model_size=args.model_size, no_move=args.no_move)
+    detector = YOLOCarDetector(model_size=args.model_size, no_move=args.no_move, force=args.force)
 
     # Track files processed in this run to prevent duplicates
     processed_in_this_run = set()
