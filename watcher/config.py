@@ -29,7 +29,7 @@ FORCE_STOP_AFTER_MOTION = 5  # Force stop recording after this many seconds of n
 # Storage settings
 STORAGE_DIR = "recorded_clips"
 CLIP_FORMAT = "mp4"
-CODEC = "mp4v"
+CODEC = "avc1"
 MAX_STORAGE_GB = 10  # Maximum storage usage in GB
 CLEANUP_OLD_CLIPS = True  # Whether to automatically delete old clips
 CLIP_RETENTION_DAYS = 7  # How many days to keep clips
