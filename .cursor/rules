@@ -36,7 +36,7 @@ Depending on how far we get, there'll be more or less automation.
 
 ## Software Stack
 - We're free to choose any operating system available on the Raspberry Pi, the home lab server is running a current version of Ubuntu
-- The programming language of choice should be Python for anything that requires programming, for scripting at the file system level Bash is fine too
+- The programming language of choice should be Python for anything that requires programming, for scripting at the file system level Bash is preferable
 - If there ends up being processing that needs to be outside of the recording Raspberry Pi, then that can be deployed on the home lab server using Docker
 - Deployment of both the recording side and the processing side (if there are two) are done via Ansible, in the beginning, manual deployment is fine
 
