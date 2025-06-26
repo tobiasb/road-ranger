@@ -89,7 +89,8 @@ class VideoRecorder:
     def _generate_filename(self) -> str:
         """Generate filename for new clip"""
         timestamp = get_timestamp_string()
-        filename = f"{config.CLIP_NAME_FORMAT.format(timestamp=timestamp, duration=config.CLIP_DURATION)}.{config.CLIP_FORMAT}"
+        duration_str = str(config.CLIP_DURATION)  # Use configured duration
+        filename = f"{config.CLIP_NAME_FORMAT.format(timestamp=timestamp, duration=duration_str)}.{config.CLIP_FORMAT}"
         return os.path.join(config.STORAGE_DIR, filename)
 
     def record_clip(self, frames: List[np.ndarray]) -> str:
@@ -108,9 +109,14 @@ class VideoRecorder:
         # Calculate actual duration from number of frames
         actual_duration = len(frames) / config.FPS
 
-        # Generate filename with actual duration
+        # Ensure minimum duration of 1 second for very short clips
+        if actual_duration < 1.0:
+            actual_duration = 1.0
+
+        # Generate filename with actual duration (use 1 decimal place for precision)
         timestamp = get_timestamp_string()
-        filename = f"{config.CLIP_NAME_FORMAT.format(timestamp=timestamp, duration=int(actual_duration))}.{config.CLIP_FORMAT}"
+        duration_str = f"{actual_duration:.1f}".rstrip('0').rstrip('.')  # Remove trailing zeros and decimal
+        filename = f"{config.CLIP_NAME_FORMAT.format(timestamp=timestamp, duration=duration_str)}.{config.CLIP_FORMAT}"
         filepath = os.path.join(config.STORAGE_DIR, filename)
 
         writer = self._create_video_writer(filepath)
