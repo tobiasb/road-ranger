@@ -40,8 +40,10 @@ def main():
     parser = argparse.ArgumentParser(description='Run YOLOv8 car detection on video clips')
     parser.add_argument('--model-size', choices=['n', 's', 'm', 'l', 'x'], default=config.MODEL_SIZE,
                        help=f'YOLO model size (default: {config.MODEL_SIZE})')
-    parser.add_argument('--force-reprocess', action='store_true',
-                       help='Force reprocessing of all files (default: skip already processed files)')
+    parser.add_argument('--source-dir', type=str, default=config.STORAGE_DIR,
+                       help=f'Source directory containing video clips (default: {config.STORAGE_DIR})')
+    parser.add_argument('--dest-dir', type=str, default=None,
+                       help='Destination directory for organized results (default: source_dir + "_organized")')
     parser.add_argument('--no-move', action='store_true',
                        help='Do not move files to organized directories (useful for evaluation)')
     args = parser.parse_args()
@@ -49,48 +51,58 @@ def main():
     setup_logging()
     logger = logging.getLogger(__name__)
 
+    # Set destination directory if not provided
+    if args.dest_dir is None:
+        args.dest_dir = f"{args.source_dir}_organized"
+
     logger.info(f"Starting YOLOv8 car detection analysis using model size: {args.model_size}")
-    if args.force_reprocess:
-        logger.info("Force reprocess mode enabled - will reprocess all files")
+    logger.info(f"Source directory: {args.source_dir}")
+    logger.info(f"Destination directory: {args.dest_dir}")
     logger.info("Press Ctrl-C to stop processing gracefully (progress will be saved)")
 
     # Check if input directory exists
-    if not os.path.exists(config.STORAGE_DIR):
-        logger.error(f"Input directory {config.STORAGE_DIR} does not exist!")
+    if not os.path.exists(args.source_dir):
+        logger.error(f"Source directory {args.source_dir} does not exist!")
         sys.exit(1)
 
     # Check if there are any video files
-    video_files = [f for f in os.listdir(config.STORAGE_DIR)
+    video_files = [f for f in os.listdir(args.source_dir)
                    if f.lower().endswith(('.mp4', '.avi', '.mov', '.mkv'))]
 
     if not video_files:
-        logger.warning(f"No video files found in {config.STORAGE_DIR}")
+        logger.warning(f"No video files found in {args.source_dir}")
         sys.exit(0)
+
+    # Check for duplicate filenames in the source directory
+    filename_counts = {}
+    for video_file in video_files:
+        filename_counts[video_file] = filename_counts.get(video_file, 0) + 1
+
+    duplicates = [filename for filename, count in filename_counts.items() if count > 1]
+    if duplicates:
+        logger.warning(f"Found {len(duplicates)} duplicate filenames in source directory:")
+        for duplicate in duplicates:
+            logger.warning(f"  - {duplicate} (appears {filename_counts[duplicate]} times)")
+        logger.warning("This could cause issues during processing. Consider removing duplicates.")
 
     logger.info(f"Found {len(video_files)} video files to analyze")
 
     # Initialize YOLO car detector
     detector = YOLOCarDetector(model_size=args.model_size, no_move=args.no_move)
 
+    # Track files processed in this run to prevent duplicates
+    processed_in_this_run = set()
+
     # Process all clips
     try:
-        if args.force_reprocess:
-            # For force reprocess, we need to clear the organized directory first
-            output_dir = f"{config.STORAGE_DIR}_organized"
-            if os.path.exists(output_dir):
-                logger.info(f"Clearing existing organized directory: {output_dir}")
-                import shutil
-                shutil.rmtree(output_dir)
-
-        results = detector.process_all_clips()
+        results = detector.process_all_clips(input_dir=args.source_dir, output_dir=args.dest_dir)
 
         # Print summary to console
         summary = detector.create_summary_report(results)
         print(summary)
 
         # Save results to JSON file (analysis report)
-        output_dir = f"{config.STORAGE_DIR}_organized"
-        results_file = os.path.join(output_dir, "analysis_results.json")
+        results_file = os.path.join(args.dest_dir, "analysis_results.json")
         logger.info(f"Analysis results saved to {results_file}")
 
         if results.get("interrupted", False):

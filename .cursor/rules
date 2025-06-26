@@ -68,6 +68,7 @@ Depending on how far we get, there'll be more or less automation.
 - Mock camera input for testing detection algorithms
 - Test with sample video files before using live camera
 - The camera is connected to the RPi, development is done over SSH on the raspberry. That means any code executed needs to run on the RPi, consider that when suggesting commands
+- When running Python files, make sure you are using a virtual environment if applicable, e.g. via `pipenv run` for the inspector code
 
 ## Performance Considerations
 - Optimize for real-time processing where possible
