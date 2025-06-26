@@ -24,3 +24,7 @@ picamera2
 # 3. Activate it: source venv/bin/activate
 # 4. Install dependencies: pip install -r requirements.txt
 # 5. Run scripts with: python main.py (while venv is activated)
+
+# SERVER-SIDE ANALYSIS:
+# For car detection and ML processing, use the Pipfile on your Ubuntu server
+# The server has more resources and can handle YOLOv8 and other ML libraries

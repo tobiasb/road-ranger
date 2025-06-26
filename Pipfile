@@ -1,0 +1,45 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+# Core ML dependencies
+ultralytics = ">=8.0.0"
+torch = ">=2.0.0"
+torchvision = ">=0.15.0"
+
+# Computer vision
+opencv-python = ">=4.8.0"
+numpy = ">=1.24.0"
+pillow = ">=10.0.0"
+
+# Data processing
+pandas = ">=2.0.0"
+matplotlib = ">=3.7.0"
+seaborn = ">=0.12.0"
+
+# Utilities
+python-dateutil = ">=2.8.0"
+tqdm = ">=4.65.0"
+requests = ">=2.31.0"
+
+# Optional: For advanced ML features
+scikit-learn = ">=1.3.0"
+tensorflow = ">=2.13.0"  # Alternative to PyTorch if needed
+
+[dev-packages]
+# Development tools
+pytest = ">=7.4.0"
+black = ">=23.0.0"
+flake8 = ">=6.0.0"
+jupyter = ">=1.0.0"
+
+[requires]
+python_version = "3.9"
+
+[scripts]
+# Convenience scripts
+test-yolo = "python test_yolo_installation.py"
+analyze-clips = "python yolo_car_table.py"
+process-all = "python run_car_detection.py"

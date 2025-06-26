@@ -1,208 +1,222 @@
-# Road Ranger
+# Distracted Driving Detector (DDD)
 
-Distracted driving detection (DDD)
+A proof-of-concept system that uses a camera pointed at a road to detect when someone driving by is distracted.
 
-A proof-of-concept system for detecting distracted driving using a Raspberry Pi camera pointed at a road.
+## Project Overview
 
-## Current Status: Motion Recording System
+This project implements a multi-phase approach to distracted driving detection:
 
-The system currently implements the first objective: **"Between certain times of the day, a camera records and stores clips of movement"**.
+1. **Motion Detection & Recording** ✅ - Automatically records video clips when motion is detected (Raspberry Pi)
+2. **Car Detection** ✅ - Filters clips to identify those containing cars (Server-side ML)
+3. **Driver Detection** 🔄 - Identifies clips with visible drivers
+4. **Distraction Detection** 🔄 - Analyzes driver behavior for signs of distraction
 
-### Features
+## Architecture
 
-- **Time-based recording**: Only records during configured hours (default: 8 AM - 6 PM)
-- **Motion detection**: Uses OpenCV background subtraction to detect movement
-- **Raspberry Pi camera support**: Uses Picamera2 for the Raspberry Pi Global Shutter Camera
-- **Automatic clip management**: Records clips when motion is detected and stops when motion ends
-- **Smart clip duration**: Clips are automatically stopped when motion ends (typically 3-10 seconds)
-- **Storage management**: Automatic cleanup of old clips based on retention policy
-- **Configurable settings**: Adjustable motion sensitivity, clip duration, and storage settings
-- **Clean logging**: Reduced verbose output with focused motion detection events
+### Raspberry Pi (Recording Side)
+- **Hardware**: Raspberry Pi 4 + Global Shutter Camera
+- **Role**: Motion detection, video recording, storage
+- **Dependencies**: Lightweight (OpenCV, Picamera2)
+- **Files**: `main.py`, `motion_detector.py`, `video_recorder.py`
 
-### Hardware Requirements
+### Ubuntu Server (Analysis Side)
+- **Hardware**: Standard Ubuntu server with more CPU/memory
+- **Role**: ML processing, car detection, analysis
+- **Dependencies**: Heavy ML libraries (YOLOv8, PyTorch)
+- **Files**: `yolo_car_detector.py`, `yolo_car_table.py`
 
-- Raspberry Pi 4 Model B (4GB recommended)
-- Raspberry Pi Global Shutter Camera (6mm or 16mm lens)
-- SD card with sufficient storage (or NAS for storage)
+## Hardware Requirements
 
-### Quick Setup (Recommended)
+- **Raspberry Pi**: Pi 4 Model B/4GB + Global Shutter Camera
+- **Server**: Ubuntu 20.04+ with Python 3.9+
+- **Storage**: Home NAS for shared storage
+- **Network**: Both devices on same network
 
-Run the automated setup script:
+## Quick Start
 
-```bash
-./setup.sh
-```
-
-This will install all dependencies and set up the virtual environment automatically.
-
-### Manual Setup
-
-If you prefer to set up manually:
+### 1. Raspberry Pi Setup (Recording)
 
 ```bash
 # Install system dependencies
-sudo apt update
-sudo apt install python3-picamera2 python3-opencv python3-pip python3-venv python3-dateutil
+sudo apt install python3-picamera2 python3-opencv python3-pip python3-venv
 
-# Create and activate virtual environment (required for externally managed environment)
+# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
 
 # Install Python dependencies
 pip install -r requirements.txt
+
+# Start motion recording
+python main.py
 ```
 
-**Important Note**: For Picamera2 compatibility, the system now runs with system Python (`python3`) instead of the virtual environment. The virtual environment is still used for other dependencies.
+### 2. Server Setup (Analysis)
 
-### Configuration
+```bash
+# Install pipenv
+pip3 install --user pipenv
 
-Edit `config.py` to customize the system:
+# Install ML dependencies
+pipenv install
+
+# Test installation
+pipenv run test-yolo
+
+# Transfer clips from RPi and analyze
+scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/recorded_clips/ ./
+pipenv run analyze-clips
+```
+
+## Detailed Setup
+
+### Raspberry Pi Configuration
+
+Edit `config.py` to adjust recording settings:
 
 ```python
-# Recording hours (24-hour format)
+# Recording times
 RECORDING_START_TIME = "08:00"  # 8 AM
 RECORDING_END_TIME = "18:00"    # 6 PM
 
-# Motion detection sensitivity (tuned for stability)
-MOTION_THRESHOLD = 80          # Higher = less sensitive (was 25)
-MIN_MOTION_AREA = 1500         # Minimum area to trigger recording (was 500)
-MOTION_PERSISTENCE_FRAMES = 1  # Frames motion must persist to trigger recording
-MOTION_COOLDOWN_FRAMES = 2     # Frames to wait after motion stops
+# Motion detection
+MOTION_THRESHOLD = 80
+MIN_MOTION_AREA = 1500
 
-# Clip settings
-CLIP_DURATION = 10             # Maximum seconds per clip
-FORCE_STOP_AFTER_MOTION = 5    # Force stop after 5s of no motion
-MAX_CLIP_DURATION = 30         # Maximum clip length
-
-# Storage settings
-STORAGE_DIR = "recorded_clips" # Where clips are saved
-CLIP_RETENTION_DAYS = 7        # How long to keep clips
+# Storage
+STORAGE_DIR = "recorded_clips"
+CLIP_RETENTION_DAYS = 7
 ```
 
-### Usage
+### Server Configuration
 
-#### 1. Test Motion Detection
+See `server_setup.md` for detailed server setup instructions.
 
-First, test that motion detection works with your camera:
+## Usage
 
+### Phase 1: Motion Recording (Raspberry Pi)
 ```bash
-python3 test_motion_detection.py
+# Start recording system
+python main.py
 ```
 
-This will show motion detection events without recording clips. Press Ctrl+C to stop.
-
-For detailed motion detection debugging:
-
+### Phase 2: Car Detection (Server)
 ```bash
-python3 debug_motion.py
+# Transfer clips from RPi
+scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/recorded_clips/ ./
+
+# Analyze with YOLOv8
+pipenv run analyze-clips
 ```
 
-#### 2. Run the Full System
+### Phase 3: Manual Review
+Review clips in organized directories:
+- `recorded_clips_organized/with_cars/` - Clips containing cars
+- `recorded_clips_organized/no_cars/` - Clips without cars
 
-Start the motion recording system:
+## File Transfer Options
 
+### Option 1: Manual SCP
 ```bash
-python3 main.py
+scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/recorded_clips/ ./
 ```
 
-The system will:
-- Only record during configured hours
-- Detect motion using background subtraction
-- Record clips when motion is detected
-- Stop recording when motion stops (typically 3-10 seconds)
-- Save clips with accurate duration in filename
-- Clean logging output (no verbose Picamera2 debug messages)
-
-#### 3. View Recorded Clips
-
-List all recorded clips (sorted by filename):
-
+### Option 2: Network Share
 ```bash
-python3 view_clips.py list
+# Copy to NAS from RPi
+cp recorded_clips/*.mp4 /mnt/nas/ddd_clips/
+
+# Copy from NAS to server
+cp /mnt/nas/ddd_clips/*.mp4 ./recorded_clips/
 ```
 
-Play a specific clip:
-
+### Option 3: Automated Script
+Create `transfer_clips.sh` for automatic transfer:
 ```bash
-python3 view_clips.py play motion_20250625_140352_6s.mp4
+rsync -avz --remove-source-files \
+  user@raspberrypi-ddd.local:/home/tobi/ddd/recorded_clips/ \
+  ./recorded_clips/
 ```
 
-Delete a clip:
+## Performance Notes
 
+### Raspberry Pi Optimization
+- Lightweight dependencies only
+- Efficient motion detection
+- Automatic clip cleanup
+- Minimal resource usage
+
+### Server Optimization
+- YOLOv8n model for speed
+- Configurable confidence thresholds
+- Frame sampling for efficiency
+- Batch processing capabilities
+
+## Development
+
+### Testing Components
+
+**Raspberry Pi:**
 ```bash
-python3 view_clips.py delete motion_20250625_140352_6s.mp4
+# Test motion detection
+python test_motion_detection.py
+
+# Test camera
+python test_picamera2.py
 ```
 
-Clean up old clips:
-
+**Server:**
 ```bash
-python3 view_clips.py cleanup
+# Test YOLOv8
+pipenv run test-yolo
+
+# Test car detection
+pipenv run analyze-clips
 ```
 
-#### 4. Camera Streaming (Optional)
+### Adding Features
+1. Keep RPi side lightweight
+2. Add ML features to server side
+3. Use file-based messaging between components
+4. Test on actual hardware
 
-For remote monitoring, you can stream the camera feed:
+## Troubleshooting
 
-```bash
-python3 camera_streamer.py
-```
+### Raspberry Pi Issues
+- **Camera not detected**: Check connections and permissions
+- **Motion detection issues**: Adjust thresholds in `config.py`
+- **Storage full**: Enable cleanup in `config.py`
 
-Then open `http://raspberrypi-ddd.local:8080` in your web browser.
+### Server Issues
+- **YOLOv8 installation**: See `server_setup.md`
+- **Memory issues**: Use smaller model or increase sampling
+- **Transfer issues**: Check network connectivity
 
-### File Structure
+## Project Structure
 
 ```
 ddd/
-├── main.py                 # Main motion recording system
-├── motion_detector.py      # Motion detection using OpenCV/Picamera2
-├── video_recorder.py       # Video clip recording with accurate durations
-├── config.py              # Configuration settings
-├── requirements.txt       # Python dependencies
-├── setup.sh              # Automated setup script
-├── test_motion_detection.py # Test motion detection
-├── debug_motion.py        # Detailed motion detection debugging
-├── view_clips.py          # View and manage recorded clips
-├── camera_streamer.py     # HTTP camera stream
-├── utils/
-│   └── time_utils.py      # Time utility functions
-├── venv/                  # Virtual environment (created during setup)
-└── recorded_clips/        # Where motion clips are stored
+├── main.py                 # Motion recording (RPi)
+├── motion_detector.py      # Motion detection (RPi)
+├── video_recorder.py       # Video recording (RPi)
+├── config.py              # Configuration (shared)
+├── requirements.txt       # RPi dependencies
+├── Pipfile               # Server dependencies
+├── yolo_car_detector.py   # YOLOv8 detection (server)
+├── yolo_car_table.py      # Analysis script (server)
+├── server_setup.md        # Server setup guide
+├── recorded_clips/        # Video storage (shared)
+└── README.md             # This file
 ```
 
-### Recent Improvements
+## License
 
-- **Stable motion detection**: Tuned parameters to reduce false positives while maintaining sensitivity
-- **Accurate clip durations**: Filenames now show actual clip length (e.g., `6s.mp4` instead of `10s.mp4`)
-- **Clean logging**: Reduced verbose Picamera2 debug output
-- **Smart clip management**: Clips automatically stop when motion ends (typically 3-10 seconds)
-- **Improved cooldown**: Better handling of motion start/stop events
-- **Sorted clip listing**: Clips are now listed in chronological order by filename
+This project is for research and educational purposes.
 
-### Troubleshooting
+## Contributing
 
-1. **"externally-managed-environment" error**: Use `python3` instead of `python` for main scripts
-2. **"No module named 'dateutil'" error**: Install with `sudo apt install python3-dateutil`
-3. **Camera not detected**: Make sure Picamera2 is installed and the camera is properly connected
-4. **Too many false positives**: Increase `MOTION_THRESHOLD` or `MIN_MOTION_AREA` in config
-5. **No motion detected**: Decrease `MOTION_THRESHOLD` or `MIN_MOTION_AREA`
-6. **Storage full**: Enable `CLEANUP_OLD_CLIPS` or increase `CLIP_RETENTION_DAYS`
-7. **Verbose logging**: Picamera2 debug messages are now filtered to INFO level
-
-### Next Steps
-
-This system provides the foundation for the distracted driving detection pipeline. The next objectives are:
-
-1. **Car detection**: Identify clips that contain cars
-2. **Driver detection**: Identify clips with cars that also show drivers
-3. **Distraction detection**: Identify when drivers are distracted (looking at phone, etc.)
-
-The recorded clips can be manually reviewed or processed with computer vision models for automated detection.
-
-## Cursor Configuration
-
-This project includes Cursor rules (`.cursor/rules`) to guide AI assistance with:
-- project-specific coding patterns
-- Architectural decisions
-- Code organization
-- Testing strategies
+1. Follow the lightweight RPi / heavy server architecture
+2. Test on actual hardware
+3. Update documentation
+4. Use file-based messaging between components
 
