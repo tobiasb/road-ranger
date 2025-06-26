@@ -60,6 +60,8 @@ Depending on how far we get, there'll be more or less automation.
 - Keep configuration separate from code
 - Organize by functionality: capture, detection, storage, messaging
 - Use clear, descriptive file and directory names
+- Keep the README.md file updated with any changes to the project
+- Make sure to document any packages that need to be installed or files that need to be downloaded
 
 ## Testing Strategy
 - This is for a hackathon, no formal tests but make it easy to execute individual components to test them manually
