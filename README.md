@@ -35,7 +35,7 @@ Thanks to my employer [Clio](https://github.com/clio) I was able to spend almost
 *Complete hardware setup including Raspberry Pi, camera, and power supply*
 
 ![Stream test app](screenshots/streamer.png)
-*Helper web app for camera calibration and testing*
+*Helper web app for camera calibration and testing, this was from when I haven't realized yet that things are sometimes RGB and sometimes BGR 🤷*
 
 ![Camera Mounting](screenshots/pioncar.jpeg)
 *Camera mounted and positioned to capture traffic on the road, early days, the Pi didn't have its shell yet*
