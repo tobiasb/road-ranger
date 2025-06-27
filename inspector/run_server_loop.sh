@@ -32,6 +32,7 @@ while true; do
         echo "Warning: server.sh exited with code $exit_code"
     fi
 
-    echo "Server stopped. Waiting 5 seconds before next run..."
-    sleep 5
+    WAIT_TIME=10
+    echo "Server stopped. Waiting $WAIT_TIME seconds before next run..."
+    sleep $WAIT_TIME
 done
