@@ -3,6 +3,14 @@
 ## Project Overview
 This is project "Distracted Driving Detector". Our goal is to build a proof of concept of a system that, using a camera pointed at a road, lets us detect when someone driving by is distracted. Ideally as much as possible of this is automated but it's fine to do things iteratively at first.
 
+# why am I doing this?
+- people drive too fast where i live
+- people drive distracted way too often, i see people on their phones way too often. i've had two situations where i had to give way to the car at the crosswalk because it didn't see me
+- best way to draw attention to problem is to have data
+- i couldn't find a suitable / affordable solution
+- my hope is to take this a step further and have AI do most of the `is_distracted` classification so that I only have to classify the occasional video, otherwise it's not practical
+- then we'll package it and make it easy for others to replicate in their community
+
 ## Work breakdown
 - We want to progress incrementally with most operation done manually in the beginning
 - Over time we will implement automation for more and more tasks

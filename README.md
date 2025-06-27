@@ -2,7 +2,21 @@
 
 A proof-of-concept system that uses a camera pointed at a road to detect when someone driving by is distracted.
 
-## Project Overview
+## 🌟 Motivation: Why Are We Doing This?
+
+🚶‍♂️💨 **They Zip Past My Front Door** — Cars speed through *my* quiet neighbourhood far too fast.
+
+📵👀 **I Keep Catching Them on Their Phones** — It drives me crazy how often I see a lit-up screen instead of eyes on the road.
+
+😱✋ **Two Near-Misses Were Two Too Many** — I literally had to jump back at the cross-walk because the driver never saw me.
+
+📊🗂️ **I Want Hard Proof, Not Anecdotes** — Video + data beats "trust me bro" every day of the week.
+
+🤖🪄 **Let the Bots Do the Boring Work** — My goal is for AI to handle 95 % of the labeling so I can just review the tricky clips over a ☕.
+
+> This started as a weekend hack to make *my street* safer and quickly turned into a community tool for change.  If we can measure it, we can fix it. ✨
+
+## 🎯 Project Overview
 
 This project implements a multi-phase approach to distracted driving detection:
 
@@ -12,7 +26,7 @@ This project implements a multi-phase approach to distracted driving detection:
 4. **Driver Detection** 🔄 - Identifies clips with visible drivers
 5. **Distraction Detection** 🔄 - Analyzes driver behavior for signs of distraction
 
-## Architecture
+## 🏗️ Architecture
 
 The system is split into three specialized components:
 
@@ -37,7 +51,7 @@ The system is split into three specialized components:
 - **Location**: `classifier/` directory
 - **Config**: `classifier/config.py` - Web app and classification settings
 
-## Quick Start
+## 🚀 Quick Start
 
 ### 1. Watcher Setup (Raspberry Pi)
 
@@ -87,7 +101,9 @@ pipenv run start
 
 Then open your browser to: **http://localhost:5001**
 
-## Configuration
+*(Below are the exact steps I run on my own machines—tweak as needed!)*
+
+## ⚙️ Configuration
 
 ### Watcher Configuration (`watcher/config.py`)
 ```python
@@ -130,7 +146,7 @@ MAX_VIDEOS_PER_PAGE = 20        # Clips per page
 AUTO_PLAY_VIDEOS = False        # Auto-play option
 ```
 
-## File Transfer Options
+## 📂 File Transfer Options
 
 ### Option 1: Manual SCP
 ```bash
@@ -154,7 +170,7 @@ cp /mnt/nas/ddd_clips/*.mp4 ./inspector/
 
 **Note**: The watcher now uses atomic file operations to prevent partial file transfers. Files are written to a temporary location first, then moved to the final storage location only when complete. This ensures reliable file transfers without delays or corruption.
 
-## Usage
+## 🎬 Usage
 
 ### Phase 1: Motion Recording (Watcher)
 ```bash
@@ -189,7 +205,7 @@ Then open your browser to **http://localhost:5001** and:
 3. **Classifier** provides web interface for manual distraction classification
 4. All components share the same database for seamless data flow
 
-## Performance Notes
+## ⚡ Performance Notes
 
 ### Watcher Optimization
 - Lightweight dependencies only (installed via apt)
@@ -209,7 +225,7 @@ Then open your browser to **http://localhost:5001** and:
 - Responsive web design
 - Keyboard shortcuts for quick classification
 
-## Development
+## 💻 Development
 
 ### Testing Components
 
@@ -240,7 +256,7 @@ pipenv run start
 3. Use file-based messaging between components
 4. Test on actual hardware
 
-## Troubleshooting
+## 🛠️ Troubleshooting
 
 ### Watcher Issues
 - **Camera not detected**: Check connections and permissions
@@ -257,7 +273,7 @@ pipenv run start
 - **Videos not loading**: Check video directory path in `classifier/config.py`
 - **Port already in use**: Change port in `classifier/config.py`
 
-## Project Structure
+## 🗂️ Project Structure
 
 ```
 road-ranger/
@@ -289,11 +305,11 @@ road-ranger/
 └── README.md                  # This file
 ```
 
-## License
+## 📜 License
 
 This project is for research and educational purposes.
 
-## Contributing
+## 🙌 Contributing
 
 1. Follow the lightweight Watcher / heavy Inspector architecture
 2. Test on actual hardware
