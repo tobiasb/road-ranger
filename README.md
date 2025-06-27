@@ -1,6 +1,6 @@
-# Road Ranger 🏘️🚗🎥🤠🔍
+# Road Ranger 🏘️🚗🎥🤠🔍🤖📈🛠📉🫂
 
-This is a proof-of-concept of a distracted driving detector (DDD) that uses a camera pointed at a road to detect when someone driving by is distracted. It has been on my mind for a long time.
+This is a proof-of-concept of a distracted driving detector (DDD) that uses the video from a camera pointed at a road to detect when someone driving by is distracted. It has been on my mind for a long time.
 
 ## 🌟 Motivation: Why Are We Doing This?
 
