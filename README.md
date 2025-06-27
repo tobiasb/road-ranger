@@ -28,8 +28,9 @@ Thanks to my employer [Clio](https://github.com/clio) I was able to spend almost
 4. **Driver Detection** 🔄 - Identifies clips with visible drivers
 5. **Distraction Detection** 🔄 - Analyzes driver behavior for signs of distraction
 
-## Screenshots
+## 📸 Screenshots
 
+### 🔧 Hardware Setup
 ![System Components](screenshots/piontable.jpeg)
 *Complete hardware setup including Raspberry Pi, camera, and power supply*
 
@@ -42,17 +43,19 @@ Thanks to my employer [Clio](https://github.com/clio) I was able to spend almost
 ![Raspberry Pi Setup](screenshots/piinbox.jpeg)
 *And here's the final version, the Pi got a shell now*
 
-![Classifier Web Interface](screenshots/classifier.png)
+### 💻 Software Interface
+
+![Classifier Web app](screenshots/classifier.png)
 *The web-based classification interface for manually reviewing and labeling distracted driving clips*
 
-## Next steps
+## 🚀 Next Steps
 
-What I learned most from this is that photography is hard, WiFi is a pain and people just drive their cars way too fast.
+What I learned most from this is that photography is hard 📸, WiFi is a pain 📶 and people just drive their cars way too fast 🏎️💨.
 
 To make this a success, we need to:
-- Solve the issue around quality/lighting of the video clips. There might be low hanging fruit here with the hardware we got.
-- Once the quality is good enough, we can start to think about the AI part. Driver detection is a good start and "conventional" models like YOLOv8 might be good enough for this.
-- Once we know there's a driver, we can start looking into distraction detection. Maybe there are specialized models out there, maybe LLMs could help here? 🤷‍♀️
+- 🎥 Solve the issue around quality/lighting of the video clips. There might be low hanging fruit here with the hardware we got.
+- 🤖 Once the quality is good enough, we can start to think about the AI part. Driver detection is a good start and "conventional" models like YOLOv8 might be good enough for this.
+- 👀 Once we know there's a driver, we can start looking into distraction detection. Maybe there are specialized models out there, maybe LLMs could help here? 🤷‍♀️
 
 ## 🏗️ Architecture
 
@@ -134,7 +137,7 @@ Then open your browser to: **http://localhost:5001** and you'll see the web inte
 
 ## ⚙️ Configuration
 
-### Watcher Configuration (`watcher/config.py`)
+### 📹 Watcher Configuration (`watcher/config.py`)
 ```python
 # Recording schedule
 RECORDING_START_TIME = "08:00"  # 8 AM
@@ -149,7 +152,7 @@ STORAGE_DIR = "recorded_clips"
 CLIP_RETENTION_DAYS = 7
 ```
 
-### Inspector Configuration (`inspector/config.py`)
+### 🤖 Inspector Configuration (`inspector/config.py`)
 ```python
 # YOLO model settings
 MODEL_SIZE = 'n'                # n=nano, s=small, m=medium, l=large
@@ -160,7 +163,7 @@ SAMPLE_FRAMES = 10              # Frames to sample per video
 INPUT_SIZE = (640, 640)         # YOLO input size
 ```
 
-### Classifier Configuration (`classifier/config.py`)
+### 🏷️ Classifier Configuration (`classifier/config.py`)
 ```python
 # Flask settings
 FLASK_HOST = "0.0.0.0"          # Listen on all interfaces
@@ -177,12 +180,12 @@ AUTO_PLAY_VIDEOS = False        # Auto-play option
 
 ## 📂 File Transfer Options
 
-### Option 1: Manual SCP
+### 🔄 Option 1: Manual SCP
 ```bash
 scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/watcher/recorded_clips/ ./inspector/
 ```
 
-### Option 2: Network Share
+### 📁 Option 2: Network Share
 ```bash
 # Copy to NAS from Watcher
 cp watcher/recorded_clips/*.mp4 /mnt/nas/ddd_clips/
@@ -191,7 +194,7 @@ cp watcher/recorded_clips/*.mp4 /mnt/nas/ddd_clips/
 cp /mnt/nas/ddd_clips/*.mp4 ./inspector/
 ```
 
-### Option 3: Automated Script
+### 🤖 Option 3: Automated Script
 ```bash
 # Use the provided transfer script
 ./transfer_clips.sh
@@ -201,34 +204,34 @@ cp /mnt/nas/ddd_clips/*.mp4 ./inspector/
 
 ## 🎬 Usage
 
-### Phase 1: Motion Recording (Watcher)
+### 📹 Phase 1: Motion Recording (Watcher)
 ```bash
 cd watcher/
 python3 main.py
 ```
 
-### Phase 2: Car Detection (Inspector)
+### 🔍 Phase 2: Car Detection (Inspector)
 ```bash
 cd inspector/
 pipenv run analyze-clips
 ```
 
-### Phase 3: Manual Classification (Classifier)
+### 🏷️ Phase 3: Manual Classification (Classifier)
 ```bash
 cd classifier/
 pipenv run start
 ```
 
 Then open your browser to **http://localhost:5001** and:
-1. Review unclassified clips that contain cars
-2. Watch each video and classify as:
+1. 📺 Review unclassified clips that contain cars
+2. 👀 Watch each video and classify as:
    - **Yes** - Driver is distracted
    - **No** - Driver is not distracted
    - **Don't Know** - Unable to determine (will appear again later)
-3. Track progress with real-time statistics
-4. Review classification history
+3. 📊 Track progress with real-time statistics
+4. 📋 Review classification history
 
-### Complete Workflow
+### 🔄 Complete Workflow
 1. **Watcher** records motion-triggered video clips
 2. **Inspector** analyzes clips for car detection and stores results in database
 3. **Classifier** provides web interface for manual distraction classification
@@ -236,19 +239,19 @@ Then open your browser to **http://localhost:5001** and:
 
 ## ⚡ Performance Notes
 
-### Watcher Optimization
+### 🚀 Watcher Optimization
 - Lightweight dependencies only (installed via apt)
 - Efficient motion detection with minimal CPU usage
 - Automatic cleanup prevents storage overflow
 - Configurable recording windows reduce unnecessary processing
 
-### Inspector Optimization
+### 🤖 Inspector Optimization
 - YOLOv8n model for speed
 - Configurable confidence thresholds
 - Frame sampling for efficiency
 - Batch processing capabilities
 
-### Classifier Optimization
+### 💻 Classifier Optimization
 - Efficient database queries with indexing
 - Pagination for large datasets
 - Responsive web design
@@ -256,7 +259,7 @@ Then open your browser to **http://localhost:5001** and:
 
 ## 💻 Development
 
-### Testing Components
+### 🧪 Testing Components
 
 **Watcher:**
 ```bash
@@ -279,7 +282,7 @@ pipenv run start
 # Then test in browser at http://localhost:5001
 ```
 
-### Adding Features
+### 🛠️ Adding Features
 1. Keep Watcher side lightweight
 2. Add ML features to Inspector side
 3. Use file-based messaging between components
@@ -287,17 +290,17 @@ pipenv run start
 
 ## 🛠️ Troubleshooting
 
-### Watcher Issues
+### 📹 Watcher Issues
 - **Camera not detected**: Check connections and permissions
 - **Motion detection issues**: Adjust thresholds in `watcher/config.py`
 - **Storage full**: Enable cleanup in `watcher/config.py`
 
-### Inspector Issues
+### 🤖 Inspector Issues
 - **YOLOv8 installation**: See `inspector/README.md` for setup instructions
 - **Memory issues**: Use smaller model or increase sampling
 - **Transfer issues**: Check network connectivity
 
-### Classifier Issues
+### 💻 Classifier Issues
 - **Database not found**: Make sure Inspector has been run first
 - **Videos not loading**: Check video directory path in `classifier/config.py`
 - **Port already in use**: Change port in `classifier/config.py`
