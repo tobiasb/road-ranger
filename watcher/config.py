@@ -28,6 +28,7 @@ FORCE_STOP_AFTER_MOTION = 5  # Force stop recording after this many seconds of n
 
 # Storage settings
 STORAGE_DIR = "recorded_clips"
+TEMP_STORAGE_DIR = "temp_clips"  # Temporary directory for writing files before moving to final location
 CLIP_FORMAT = "mp4"
 CODEC = "avc1"
 MAX_STORAGE_GB = 10  # Maximum storage usage in GB

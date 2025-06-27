@@ -56,9 +56,11 @@ class MotionRecordingSystem:
         self.logger.info("Starting Motion Recording System...")
         self.logger.info(f"Recording window: {config.RECORDING_START_TIME} - {config.RECORDING_END_TIME}")
         self.logger.info(f"Storage directory: {config.STORAGE_DIR}")
+        self.logger.info(f"Temporary directory: {config.TEMP_STORAGE_DIR}")
 
-        # Ensure storage directory exists
+        # Ensure storage directories exist
         os.makedirs(config.STORAGE_DIR, exist_ok=True)
+        os.makedirs(config.TEMP_STORAGE_DIR, exist_ok=True)
 
         self.is_running = True
 
@@ -197,6 +199,7 @@ class MotionRecordingSystem:
             cutoff_date = datetime.now() - timedelta(days=config.CLIP_RETENTION_DAYS)
             deleted_count = 0
 
+            # Clean up main storage directory
             for filename in os.listdir(config.STORAGE_DIR):
                 if filename.endswith(f".{config.CLIP_FORMAT}"):
                     filepath = os.path.join(config.STORAGE_DIR, filename)
@@ -207,8 +210,23 @@ class MotionRecordingSystem:
                         deleted_count += 1
                         self.logger.debug(f"Deleted old clip: {filename}")
 
-            if deleted_count > 0:
-                self.logger.info(f"Cleaned up {deleted_count} old clips")
+            # Clean up temporary directory (remove any orphaned temp files older than 1 hour)
+            temp_cutoff = datetime.now() - timedelta(hours=1)
+            temp_deleted_count = 0
+
+            if os.path.exists(config.TEMP_STORAGE_DIR):
+                for filename in os.listdir(config.TEMP_STORAGE_DIR):
+                    if filename.endswith(f".{config.CLIP_FORMAT}"):
+                        filepath = os.path.join(config.TEMP_STORAGE_DIR, filename)
+                        file_time = datetime.fromtimestamp(os.path.getctime(filepath))
+
+                        if file_time < temp_cutoff:
+                            os.remove(filepath)
+                            temp_deleted_count += 1
+                            self.logger.debug(f"Deleted orphaned temp file: {filename}")
+
+            if deleted_count > 0 or temp_deleted_count > 0:
+                self.logger.info(f"Cleaned up {deleted_count} old clips and {temp_deleted_count} orphaned temp files")
 
         except Exception as e:
             self.logger.error(f"Error during cleanup: {e}")

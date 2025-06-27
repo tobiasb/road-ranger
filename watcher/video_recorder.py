@@ -27,8 +27,9 @@ class VideoRecorder:
         self.current_writer = None
         self.current_filename = None
 
-        # Ensure storage directory exists
+        # Ensure storage directories exist
         os.makedirs(config.STORAGE_DIR, exist_ok=True)
+        os.makedirs(config.TEMP_STORAGE_DIR, exist_ok=True)
 
     def start_recording(self, motion_detector):
         """
@@ -95,13 +96,15 @@ class VideoRecorder:
 
     def record_clip(self, frames: List[np.ndarray]) -> Optional[str]:
         """
-        Record a clip from a list of frames
+        Record a clip from a list of frames using atomic file operations.
+        Files are written to a temporary directory first, then moved to the final location
+        to prevent partial file transfers.
 
         Args:
             frames: List of frames to record
 
         Returns:
-            Path to the recorded file
+            Path to the recorded file in the final storage location
         """
         if not frames:
             return None
@@ -117,9 +120,12 @@ class VideoRecorder:
         timestamp = get_timestamp_string()
         duration_str = f"{actual_duration:.1f}".rstrip('0').rstrip('.')  # Remove trailing zeros and decimal
         filename = f"{config.CLIP_NAME_FORMAT.format(timestamp=timestamp, duration=duration_str)}.{config.CLIP_FORMAT}"
-        filepath = os.path.join(config.STORAGE_DIR, filename)
 
-        writer = self._create_video_writer(filepath)
+        # Write to temporary directory first
+        temp_filepath = os.path.join(config.TEMP_STORAGE_DIR, filename)
+        final_filepath = os.path.join(config.STORAGE_DIR, filename)
+
+        writer = self._create_video_writer(temp_filepath)
 
         try:
             for frame in frames:
@@ -128,5 +134,22 @@ class VideoRecorder:
         finally:
             writer.release()
 
-        print(f"Recorded clip: {filepath}")
-        return filepath
+        # Verify the temporary file was written successfully
+        if not os.path.exists(temp_filepath) or os.path.getsize(temp_filepath) < 1024:
+            print(f"Error: Temporary file {temp_filepath} was not written properly")
+            if os.path.exists(temp_filepath):
+                os.remove(temp_filepath)
+            return None
+
+        # Atomically move the file to the final location
+        try:
+            import shutil
+            shutil.move(temp_filepath, final_filepath)
+            print(f"Recorded clip: {final_filepath}")
+            return final_filepath
+        except Exception as e:
+            print(f"Error moving file from {temp_filepath} to {final_filepath}: {e}")
+            # Clean up temporary file if move failed
+            if os.path.exists(temp_filepath):
+                os.remove(temp_filepath)
+            return None
