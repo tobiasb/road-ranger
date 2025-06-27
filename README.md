@@ -1,10 +1,10 @@
 # Road Ranger 🏘️🚗🎥🤠🔍
 
-This is a proof-of-concept of a distracted diving detector (DDD) that uses a camera pointed at a road to detect when someone driving by is distracted. It has been on my mind for a long time.
+This is a proof-of-concept of a distracted driving detector (DDD) that uses a camera pointed at a road to detect when someone driving by is distracted. It has been on my mind for a long time.
 
 ## 🌟 Motivation: Why Are We Doing This?
 
-🚶‍♂️💨 **They Zip Past My Front Door** — Cars speed through my quiet neighbourhood far too fast.
+🚶‍♂️💨 **They Zip Past My Front Door** — Cars speed through my quiet neighborhood far too fast.
 
 📵👀 **I Keep Catching Them on Their Phones** — It worries me how often I see a lit-up screen instead of eyes on the road.
 
@@ -18,13 +18,24 @@ This is a proof-of-concept of a distracted diving detector (DDD) that uses a cam
 
 ## 🎯 Project Overview
 
-This project implements a multi-phase approach to distracted driving detection:
+This project implements a multi-phase approach to distracted driving detection. In the beginning there's all the infrastructure to record clips, do as much labelling of relevant clips (is there a 🚗?) and then a web interface to review the clips and classify the drivers as distracted or not. Without any assistance, this wouldn't be practical at a busy road because "luckily" most drivers are not distracted so you'd look at a lot of boring footage. My hope is that over time, more and more of the true negatives can be labelled by AI and the human review can be reduced to a few minutes a week.
+
+Thanks to my employer [Clio](https://github.com/clio) I was able to spend almost 3 days of our "build it with AI" 2025 Hackathon building the first couple of milestones!!! 🎉 Thank you Clio!
 
 1. **Motion Detection & Recording** ✅ - Automatically records video clips when motion is detected (Watcher)
 2. **Car Detection** ✅ - Filters clips to identify those containing cars (Inspector)
 3. **Manual Classification** ✅ - Web interface for human review and distraction classification (Classifier)
 4. **Driver Detection** 🔄 - Identifies clips with visible drivers
 5. **Distraction Detection** 🔄 - Analyzes driver behavior for signs of distraction
+
+## Next steps
+
+What I learned most from this is that photography is hard, WiFi is a pain and people just drive their cars way too fast.
+
+To make this a success, we need to:
+- Solve the issue around quality/lighting of the video clips. There might be low hanging fruit here with the hardware we got.
+- Once the quality is good enough, we can start to think about the AI part. Driver detection is a good start and "conventional" models like YOLOv8 might be good enough for this.
+- Once we know there's a driver, we can start looking into distraction detection. Maybe there are specialized models out there, maybe LLMs could help here? 🤷‍♀️
 
 ## 🏗️ Architecture
 
@@ -53,8 +64,6 @@ The system is split into three specialized components:
 - **Dependencies**: Lightweight (Flask, SQLite)
 - **Location**: `classifier/` directory
 - **Config**: `classifier/config.py` - Web app and classification settings
-
-
 
 ## 🚀 Quick Start
 
@@ -263,7 +272,7 @@ pipenv run start
 - **Storage full**: Enable cleanup in `watcher/config.py`
 
 ### Inspector Issues
-- **YOLOv8 installation**: See `inspector/server_setup.md`
+- **YOLOv8 installation**: See `inspector/README.md` for setup instructions
 - **Memory issues**: Use smaller model or increase sampling
 - **Transfer issues**: Check network connectivity
 
