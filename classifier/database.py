@@ -104,6 +104,12 @@ class ClassifierDB:
         """
         return self.db.get_car_clips(limit)
 
+    def get_all_clips(self, limit: Optional[int] = None) -> List[Dict]:
+        """
+        Get all clips in the database (regardless of car presence or classification)
+        """
+        return self.db.get_all_analyses(limit)
+
     def close(self):
         """Close the database connection"""
         self.db.close()

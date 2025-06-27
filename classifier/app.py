@@ -46,6 +46,11 @@ def index():
             clips = db.get_classified_clips(config.MAX_VIDEOS_PER_PAGE)
         elif filter_type == 'unclassified':
             clips = db.get_unclassified_clips(config.MAX_VIDEOS_PER_PAGE)
+        elif filter_type == 'all':
+            clips = db.get_all_clips(config.MAX_VIDEOS_PER_PAGE)
+            print("DEBUG: All clips being sent to template:")
+            for clip in clips:
+                print(f"  {clip.get('filename')} | is_car={clip.get('is_car')} | file_path={clip.get('file_path')}")
         else:
             clips = db.get_unclassified_clips(config.MAX_VIDEOS_PER_PAGE)
 
