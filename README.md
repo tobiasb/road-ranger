@@ -28,6 +28,23 @@ Thanks to my employer [Clio](https://github.com/clio) I was able to spend almost
 4. **Driver Detection** 🔄 - Identifies clips with visible drivers
 5. **Distraction Detection** 🔄 - Analyzes driver behavior for signs of distraction
 
+## Screenshots
+
+![System Components](screenshots/piontable.jpeg)
+*Complete hardware setup including Raspberry Pi, camera, and power supply*
+
+![Stream test app](screenshots/streamer.png)
+*Helper web app for camera calibration and testing*
+
+![Camera Mounting](screenshots/pioncar.jpeg)
+*Camera mounted and positioned to capture traffic on the road, early days, the Pi didn't have its shell yet*
+
+![Raspberry Pi Setup](screenshots/piinbox.jpeg)
+*And here's the final version, the Pi got a shell now*
+
+![Classifier Web Interface](screenshots/classifier.png)
+*The web-based classification interface for manually reviewing and labeling distracted driving clips*
+
 ## Next steps
 
 What I learned most from this is that photography is hard, WiFi is a pain and people just drive their cars way too fast.
@@ -79,6 +96,8 @@ cd watcher/
 python3 main.py
 ```
 
+In the watcher output you'll see motion being detected and the clips stored locally.
+
 ### 2. Inspector Setup (Server)
 
 ```bash
@@ -97,6 +116,8 @@ pipenv run test-yolo
 ./run_server_loop.sh
 ```
 
+In the inspector output you'll see the clips being analyzed and the results stored in the database.
+
 ### 3. Classifier Setup (Web Interface)
 
 ```bash
@@ -109,7 +130,7 @@ cd classifier/
 pipenv run start
 ```
 
-Then open your browser to: **http://localhost:5001**
+Then open your browser to: **http://localhost:5001** and you'll see the web interface.
 
 ## ⚙️ Configuration
 
