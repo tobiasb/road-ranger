@@ -90,3 +90,4 @@ Depending on how far we get, there'll be more or less automation.
 - Provide alternatives for different processing approaches
 - Explain trade-offs between different technical choices
 - Consider the end-to-end pipeline from capture to detection to storage
+- When writing prose (english text) don't be too advanced. Use reasonably simple words, we're not trying to impress anyone. Keep it light though

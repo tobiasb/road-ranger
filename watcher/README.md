@@ -92,7 +92,7 @@ For remote viewing and camera setup:
 # Start camera stream (accessible via web browser)
 python3 camera_streamer.py
 
-# Access stream at: http://raspberrypi-ddd.local:8080
+# Access stream at: http://raspberrypi.local:8080
 # Or: http://[your-pi-ip]:8080
 ```
 
@@ -118,12 +118,32 @@ To transfer recordings to the Inspector (analysis side):
 
 ```bash
 # Manual transfer
-scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/watcher/recorded_clips/ ./inspector/
+scp -r user@raspberrypi.local:/home/user/ddd/watcher/recorded_clips/ ./inspector/
 
 # Or use rsync for automated transfer
 rsync -avz --remove-source-files \
-  user@raspberrypi-ddd.local:/home/tobi/ddd/watcher/recorded_clips/ \
+  user@raspberrypi.local:/home/user/ddd/watcher/recorded_clips/ \
   ./inspector/
+```
+
+### Atomic File Operations
+
+The watcher uses atomic file operations to prevent partial file transfers:
+
+1. **Temporary Writing**: Files are first written to a `temp_clips/` directory
+2. **Atomic Move**: Once writing is complete, files are atomically moved to `recorded_clips/`
+3. **Clean Transfer**: Only complete files appear in the final storage location
+
+This ensures that:
+- No partial files are transferred to the inspector
+- File transfers can happen immediately without delays
+- Orphaned temporary files are automatically cleaned up
+
+### Testing Atomic Operations
+
+```bash
+# Test the atomic file writing system
+python3 test_atomic_writing.py
 ```
 
 ## Troubleshooting

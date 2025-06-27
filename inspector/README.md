@@ -16,8 +16,7 @@ The Inspector system:
 ### Hardware Requirements
 - Ubuntu 20.04+ server with Python 3.9+
 - 8GB+ RAM recommended for YOLOv8 processing
-- GPU acceleration (optional but recommended)
-- Adequate storage for video processing
+- Some storage for video processing
 
 ### Installation
 
@@ -32,10 +31,16 @@ pipenv install
 pipenv run test-yolo
 
 # Process clips from Watcher
-pipenv run analyze-clips
+./server.sh
 ```
 
 ### Convenient Shortcuts
+
+To fetch clips from the watcher and analyze them continuously, run:
+
+```bash
+./run_server_loop.sh
+```
 
 The Pipfile includes convenient scripts for common operations:
 

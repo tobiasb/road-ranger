@@ -1,20 +1,20 @@
-# Distracted Driving Detector (DDD)
+# Road Ranger 🏘️🚗🎥🤠🔍
 
-A proof-of-concept system that uses a camera pointed at a road to detect when someone driving by is distracted.
+This is a proof-of-concept of a distracted diving detector (DDD) that uses a camera pointed at a road to detect when someone driving by is distracted. It has been on my mind for a long time.
 
 ## 🌟 Motivation: Why Are We Doing This?
 
-🚶‍♂️💨 **They Zip Past My Front Door** — Cars speed through *my* quiet neighbourhood far too fast.
+🚶‍♂️💨 **They Zip Past My Front Door** — Cars speed through my quiet neighbourhood far too fast.
 
-📵👀 **I Keep Catching Them on Their Phones** — It drives me crazy how often I see a lit-up screen instead of eyes on the road.
+📵👀 **I Keep Catching Them on Their Phones** — It worries me how often I see a lit-up screen instead of eyes on the road.
 
-😱✋ **Two Near-Misses Were Two Too Many** — I literally had to jump back at the cross-walk because the driver never saw me.
+😱✋ **Two Near-Misses Were Two Too Many** — I literally had to jump back at the crosswalk because the driver never saw me.
 
-📊🗂️ **I Want Hard Proof, Not Anecdotes** — Video + data beats "trust me bro" every day of the week.
+📊🗂️ **I Want Hard Proof, Not Anecdotes** — Data is usually a good way to make a difference.
 
-🤖🪄 **Let the Bots Do the Boring Work** — My goal is for AI to handle 95 % of the labeling so I can just review the tricky clips over a ☕.
+🤖🪄 **Let the Bots Do the Boring Work** — My goal is for AI to handle 95% of the labeling so I can just review the tricky clips over a ☕.
 
-> This started as a weekend hack to make *my street* safer and quickly turned into a community tool for change.  If we can measure it, we can fix it. ✨
+> If we can measure it, we can fix it. ✨
 
 ## 🎯 Project Overview
 
@@ -76,15 +76,11 @@ pip3 install --user pipenv
 # Install ML dependencies
 pipenv install
 
-# Configure analysis settings
-nano config.py
-
 # Test installation
 pipenv run test-yolo
 
-# Transfer clips from Watcher and analyze
-scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/watcher/recorded_clips/ ./
-pipenv run analyze-clips
+# Continuously transfer clips from Watcher and analyze
+./run_server_loop.sh
 ```
 
 ### 3. Classifier Setup (Web Interface)
@@ -100,8 +96,6 @@ pipenv run start
 ```
 
 Then open your browser to: **http://localhost:5001**
-
-*(Below are the exact steps I run on my own machines—tweak as needed!)*
 
 ## ⚙️ Configuration
 
@@ -168,7 +162,7 @@ cp /mnt/nas/ddd_clips/*.mp4 ./inspector/
 ./transfer_clips.sh
 ```
 
-**Note**: The watcher now uses atomic file operations to prevent partial file transfers. Files are written to a temporary location first, then moved to the final storage location only when complete. This ensures reliable file transfers without delays or corruption.
+**Note**: The watcher uses atomic file operations to prevent partial file transfers. Files are written to a temporary location first, then moved to the final storage location only when complete.
 
 ## 🎬 Usage
 
@@ -316,14 +310,14 @@ This project is for research and educational purposes.
 3. Update documentation in appropriate directories
 4. Use file-based messaging between components
 
+## 📦 Quick Commands
+
+```bash
 # Watcher (Raspberry Pi)
 cd watcher/
 python3 main.py
 
 # Inspector (Server)
 cd inspector/
-pipenv run analyze-clips
-
-# Transfer clips
-./transfer_clips.sh
-
+./run_server_loop.sh
+```
