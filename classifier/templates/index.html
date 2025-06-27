@@ -6,6 +6,16 @@
 
 {% block content %}
 
+<!-- Fun Banner -->
+<div class="row mb-3">
+    <div class="col">
+        <div class="fun-banner text-center mx-auto">
+            <span style="font-size:1.5rem; font-weight:700; letter-spacing:0.5px;">
+                🚗 Ready to spot distracted drivers? <span style="color:#fff;">Let's roll!</span> 🎉
+            </span>
+        </div>
+    </div>
+</div>
 
 <!-- Statistics Row -->
 <div class="row mb-4">
@@ -14,7 +24,7 @@
         <div class="card stats-card {% if filter_type == 'all' %}border-primary shadow-lg{% endif %}" style="cursor:pointer;">
             <div class="card-body text-center">
                 <h3 class="card-title">{{ stats.total_clips or 0 }}</h3>
-                <p class="card-text">Total Clips</p>
+                <p class="card-text">📦 Total Clips</p>
             </div>
         </div>
         </a>
@@ -24,7 +34,7 @@
         <div class="card stats-card {% if filter_type == 'with_cars' %}border-primary shadow-lg{% endif %}" style="cursor:pointer;">
             <div class="card-body text-center">
                 <h3 class="card-title">{{ stats.with_cars or 0 }}</h3>
-                <p class="card-text">With Cars</p>
+                <p class="card-text">🚗 With Cars</p>
             </div>
         </div>
         </a>
@@ -34,7 +44,7 @@
         <div class="card stats-card {% if filter_type == 'unclassified' %}border-primary shadow-lg{% endif %}" style="cursor:pointer;">
             <div class="card-body text-center">
                 <h3 class="card-title">{{ stats.unanalyzed_distraction or 0 }}</h3>
-                <p class="card-text">Unclassified</p>
+                <p class="card-text">❓ Unclassified</p>
             </div>
         </div>
         </a>
@@ -44,7 +54,7 @@
         <div class="card stats-card {% if filter_type == 'classified' %}border-primary shadow-lg{% endif %}" style="cursor:pointer;">
             <div class="card-body text-center">
                 <h3 class="card-title">{{ classified_count }}</h3>
-                <p class="card-text">Classified</p>
+                <p class="card-text">😵‍💫 Classified Distracted</p>
             </div>
         </div>
         </a>
