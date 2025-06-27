@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+werkzeug = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"
+
+[scripts]
+start = "python app.py"
+test-app = "python -c \"from app import app; print('Flask app imported successfully')\""
+test-database = "python -c \"from database import ClassifierDB; db = ClassifierDB(); print('Database connection successful')\""
