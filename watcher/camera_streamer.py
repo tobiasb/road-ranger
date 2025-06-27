@@ -126,7 +126,7 @@ class CameraStreamer:
                         <style>
                             body { margin: 0; padding: 20px; background: #000; }
                             .container { text-align: center; }
-                            img { max-width: 100%; height: auto; border: 2px solid #333; }
+                            img { max-width: 60vw; width: 100%; height: auto; border: 2px solid #333; margin: 0 auto; display: block; }
                             .info { color: white; margin: 10px 0; font-family: Arial, sans-serif; }
                             .controls {
                                 display: flex;
