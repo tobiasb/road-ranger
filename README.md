@@ -337,17 +337,6 @@ road-ranger/
 └── README.md                  # This file
 ```
 
-## 📜 License
-
-This project is for research and educational purposes.
-
-## 🙌 Contributing
-
-1. Follow the lightweight Watcher / heavy Inspector architecture
-2. Test on actual hardware
-3. Update documentation in appropriate directories
-4. Use file-based messaging between components
-
 ## 📦 Quick Commands
 
 ```bash
@@ -358,4 +347,8 @@ python3 main.py
 # Inspector (Server)
 cd inspector/
 ./run_server_loop.sh
+
+# Classifier (Web Interface)
+cd classifier/
+pipenv run start
 ```
