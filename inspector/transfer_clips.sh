@@ -17,6 +17,7 @@ echo ""
 mkdir -p "$DEST_PATH"
 
 # Use rsync for efficient transfer with progress
+# Note: Files are now written atomically on the watcher side, so no delay is needed
 rsync -avz --progress --remove-source-files \
   "$WATCHER_HOST:$SOURCE_PATH/" \
   "$DEST_PATH/"
@@ -25,6 +26,29 @@ if [ $? -eq 0 ]; then
     echo ""
     echo "✅ Transfer completed successfully!"
     echo "📁 Clips are now available in: $DEST_PATH"
+
+    # # Verify file integrity for MP4 files
+    # echo "🔍 Verifying file integrity..."
+    # corrupted_files=0
+    # for file in "$DEST_PATH"/*.mp4; do
+    #     if [ -f "$file" ]; then
+    #         # Check if file has proper MP4 headers using ffprobe
+    #         if ! ffprobe -v quiet -print_format json -show_format "$file" >/dev/null 2>&1; then
+    #             echo "⚠️  Corrupted file detected: $(basename "$file")"
+    #             corrupted_files=$((corrupted_files + 1))
+    #             # Move corrupted file to a separate directory
+    #             mkdir -p "$DEST_PATH/corrupted"
+    #             mv "$file" "$DEST_PATH/corrupted/"
+    #         fi
+    #     fi
+    # done
+
+    # if [ $corrupted_files -eq 0 ]; then
+    #     echo "✅ All files verified successfully!"
+    # else
+    #     echo "⚠️  Found $corrupted_files corrupted files (moved to corrupted/ subdirectory)"
+    # fi
+
     echo ""
     echo "🔍 Next steps:"
     echo "   pipenv run analyze-clips"

@@ -104,7 +104,7 @@ class CarDetectionDB:
                 # Check if file already exists
                 cursor.execute(
                     "SELECT id FROM video_analysis WHERE file_path = ?",
-                    (analysis_result.get('video_path'),)
+                    (analysis_result.get('video_path', ''),)
                 )
                 existing = cursor.fetchone()
 
@@ -141,7 +141,7 @@ class CarDetectionDB:
                         analysis_result.get('confidence_threshold'),
                         analysis_result.get('min_car_frames'),
                         analysis_result.get('error'),
-                        analysis_result.get('video_path')
+                        analysis_result.get('video_path', '')
                     ))
                     self.logger.debug(f"Updated analysis for: {analysis_result.get('video_path')}")
                 else:
@@ -155,8 +155,8 @@ class CarDetectionDB:
                             error_message
                         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """, (
-                        os.path.basename(analysis_result.get('video_path', '')),
-                        analysis_result.get('video_path'),
+                        os.path.basename(analysis_result.get('video_path', 'unknown')),
+                        analysis_result.get('video_path', ''),
                         analysis_result.get('has_cars', False),
                         analysis_result.get('is_distracted'),
                         analysis_result.get('total_frames'),
@@ -555,10 +555,10 @@ class CarDetectionDB:
             Dictionary representation of the row
         """
         columns = [
-            'id', 'filename', 'file_path', 'is_car', 'is_distracted', 'total_frames', 'duration',
+            'id', 'filename', 'file_path', 'is_car', 'total_frames', 'duration',
             'frames_analyzed', 'frames_with_cars', 'car_ratio', 'total_car_detections',
             'average_cars_per_frame', 'detection_method', 'confidence_threshold',
-            'min_car_frames', 'processed_at', 'error_message'
+            'min_car_frames', 'processed_at', 'error_message', 'is_distracted'
         ]
 
         return dict(zip(columns, row))

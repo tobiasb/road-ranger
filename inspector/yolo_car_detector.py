@@ -13,6 +13,7 @@ from pathlib import Path
 import config
 from ultralytics import YOLO
 from database import CarDetectionDB
+import subprocess
 
 
 class YOLOCarDetector:
@@ -127,12 +128,29 @@ class YOLOCarDetector:
 
         if not os.path.exists(video_path):
             self.logger.error(f"Video file not found: {video_path}")
-            return {"error": "File not found"}
+            return {"video_path": video_path, "error": "File not found"}
+
+        # Check file size - if it's too small, it's likely corrupted
+        file_size = os.path.getsize(video_path)
+        if file_size < 1024:  # Less than 1KB
+            self.logger.error(f"Video file too small (likely corrupted): {video_path} ({file_size} bytes)")
+            return {"video_path": video_path, "error": "File too small (corrupted)"}
+
+        # Check if file has proper MP4 headers using ffprobe
+        try:
+            result = subprocess.run(['ffprobe', '-v', 'quiet', '-print_format', 'json', '-show_format', video_path],
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode != 0:
+                self.logger.error(f"Video file corrupted (ffprobe failed): {video_path}")
+                return {"video_path": video_path, "error": "File corrupted (invalid MP4 headers)"}
+        except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError):
+            # If ffprobe is not available or times out, continue with OpenCV
+            self.logger.warning(f"ffprobe not available or timed out for {video_path}, continuing with OpenCV")
 
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
             self.logger.error(f"Could not open video: {video_path}")
-            return {"error": "Could not open video"}
+            return {"video_path": video_path, "error": "Could not open video"}
 
         try:
             total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))

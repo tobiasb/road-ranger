@@ -49,4 +49,6 @@ Thumbs.db
 
 yolo*.pt
 
-inspector/server.[lock|pid]
+inspector/server.lock
+inspector/server.pid
+inspector/car_detection.db
