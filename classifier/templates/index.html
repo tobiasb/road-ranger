@@ -87,11 +87,35 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <!-- Video Player -->
-                        <div class="video-container mb-3 position-relative">
-                            <video preload="none" class="clip-video" data-file-path="{{ clip.file_path }}" data-rel-path="{{ clip.video_rel_path }}" style="background:#222; width:100%; border-radius:10px;">
+                        <div class="video-container mb-3 position-relative" style="overflow:hidden; border-radius:10px;">
+                            <video preload="none" class="clip-video" data-file-path="{{ clip.file_path }}" data-rel-path="{{ clip.video_rel_path }}" style="background:#222; width:100%; height:auto;">
                                 <!-- No <source> initially for lazy loading -->
                                 Your browser does not support the video tag.
                             </video>
+
+                            <!-- Custom Video Controls -->
+                            <div class="video-controls" style="background:#333; padding:10px; opacity:0; pointer-events:none; transition:opacity 0.2s;">
+                                <!-- Progress Bar -->
+                                <div class="progress-container mb-2">
+                                    <input type="range" class="video-progress" min="0" max="100" value="0" style="width:100%; height:6px; border-radius:3px; background:#555; outline:none; cursor:pointer;">
+                                </div>
+
+                                <!-- Control Buttons and Time -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <button class="btn btn-sm btn-outline-light me-2 video-play-pause" onclick="togglePlayPause(this)">
+                                            <i class="fas fa-play"></i>
+                                        </button>
+                                        <span class="text-light small video-time">0:00 / 0:00</span>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-light video-fullscreen" onclick="toggleFullscreen(this)">
+                                            <i class="fas fa-expand"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
                             <button class="btn btn-primary play-overlay" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;" onclick="loadAndPlayVideo(this)">
                                 <i class="fas fa-play"></i>
                             </button>
@@ -283,6 +307,7 @@
         if (!activeCard) return;
 
         const buttons = activeCard.querySelectorAll('.btn-classify');
+        const video = activeCard.querySelector('video');
 
         switch(event.key) {
             case '1':
@@ -294,6 +319,30 @@
             case '3':
                 if (buttons[2]) buttons[2].click();
                 break;
+            case ' ':
+                // Spacebar for play/pause
+                if (video && !video.paused) {
+                    event.preventDefault();
+                    video.pause();
+                } else if (video && video.paused) {
+                    event.preventDefault();
+                    video.play();
+                }
+                break;
+            case 'ArrowLeft':
+                // Left arrow for rewind 5 seconds
+                if (video) {
+                    event.preventDefault();
+                    video.currentTime = Math.max(0, video.currentTime - 5);
+                }
+                break;
+            case 'ArrowRight':
+                // Right arrow for forward 5 seconds
+                if (video) {
+                    event.preventDefault();
+                    video.currentTime = Math.min(video.duration, video.currentTime + 5);
+                }
+                break;
         }
     });
 
@@ -301,7 +350,9 @@
     function loadAndPlayVideo(btn) {
         const container = btn.closest('.video-container');
         const video = container.querySelector('video');
+        const controls = container.querySelector('.video-controls');
         if (!video) return;
+
         if (!video.querySelector('source')) {
             const relPath = video.getAttribute('data-rel-path');
             const source = document.createElement('source');
@@ -310,8 +361,104 @@
             video.appendChild(source);
             video.load();
         }
+        // Show custom controls (use opacity/pointer-events)
+        if (controls) {
+            controls.style.opacity = '1';
+            controls.style.pointerEvents = 'auto';
+        }
+        // Setup video event listeners
+        setupVideoControls(video, container);
         video.play();
         btn.style.display = 'none';
+    }
+
+    // Setup video controls and event listeners
+    function setupVideoControls(video, container) {
+        const progressBar = container.querySelector('.video-progress');
+        const timeDisplay = container.querySelector('.video-time');
+        const playPauseBtn = container.querySelector('.video-play-pause');
+
+        if (!progressBar || !timeDisplay || !playPauseBtn) return;
+
+        // Update progress bar and time display
+        video.addEventListener('timeupdate', function() {
+            if (video.duration) {
+                const progress = (video.currentTime / video.duration) * 100;
+                progressBar.value = progress;
+                timeDisplay.textContent = formatTime(video.currentTime) + ' / ' + formatTime(video.duration);
+            }
+        });
+
+        // Handle progress bar seeking
+        progressBar.addEventListener('input', function() {
+            const seekTime = (progressBar.value / 100) * video.duration;
+            video.currentTime = seekTime;
+        });
+
+        // Update play/pause button
+        video.addEventListener('play', function() {
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        });
+
+        video.addEventListener('pause', function() {
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        // Handle video end
+        video.addEventListener('ended', function() {
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+        });
+
+        // Update time display when metadata loads
+        video.addEventListener('loadedmetadata', function() {
+            timeDisplay.textContent = '0:00 / ' + formatTime(video.duration);
+        });
+    }
+
+    // Toggle play/pause
+    function togglePlayPause(btn) {
+        const container = btn.closest('.video-container');
+        const video = container.querySelector('video');
+        if (!video) return;
+
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    }
+
+    // Toggle fullscreen
+    function toggleFullscreen(btn) {
+        const container = btn.closest('.video-container');
+        const video = container.querySelector('video');
+        if (!video) return;
+
+        if (!document.fullscreenElement) {
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            } else if (video.webkitRequestFullscreen) {
+                video.webkitRequestFullscreen();
+            } else if (video.msRequestFullscreen) {
+                video.msRequestFullscreen();
+            }
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+    }
+
+    // Format time in MM:SS format
+    function formatTime(seconds) {
+        if (isNaN(seconds)) return '0:00';
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return mins + ':' + (secs < 10 ? '0' : '') + secs;
     }
 </script>
 {% endblock %}
