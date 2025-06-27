@@ -31,6 +31,7 @@ This project implements a multi-phase approach to distracted driving detection:
 The system is split into three specialized components:
 
 ### 🕵️ Watcher (Recording Side)
+- **Software**: Python console app
 - **Hardware**: Raspberry Pi 4 + Global Shutter Camera
 - **Role**: Motion detection, video recording, storage
 - **Dependencies**: Lightweight (OpenCV, Picamera2)
@@ -38,6 +39,7 @@ The system is split into three specialized components:
 - **Config**: `watcher/config.py` - Recording and motion detection settings
 
 ### 🔍 Inspector (Analysis Side)
+- **Software**: Python console app
 - **Hardware**: Standard Ubuntu server with more CPU/memory
 - **Role**: ML processing, car detection, analysis
 - **Dependencies**: Heavy ML libraries (YOLOv8, PyTorch)
@@ -45,11 +47,14 @@ The system is split into three specialized components:
 - **Config**: `inspector/config.py` - ML and analysis settings
 
 ### 🏷️ Classifier (Manual Review Side)
+- **Software**: Python web app
 - **Hardware**: Any device with web browser
 - **Role**: Human review, distraction classification, data management
 - **Dependencies**: Lightweight (Flask, SQLite)
 - **Location**: `classifier/` directory
 - **Config**: `classifier/config.py` - Web app and classification settings
+
+
 
 ## 🚀 Quick Start
 
