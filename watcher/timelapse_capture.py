@@ -59,18 +59,35 @@ class TimelapseCapture:
         try:
             # Create temporary Picamera2 instance to get sensor info
             temp_picam = Picamera2()
-            camera_properties = temp_picam.camera_properties
 
-            # Get the maximum resolution from sensor info
-            # The sensor info contains the maximum resolution the sensor can capture
-            max_width = camera_properties.get('PixelArraySize', {}).get('width', 1920)
-            max_height = camera_properties.get('PixelArraySize', {}).get('height', 1080)
+            # Get camera properties
+            sensor_modes = temp_picam.sensor_modes
 
-            # For Raspberry Pi Camera Module 3, this should be 4056x3040
-            # For other cameras, it will be their maximum resolution
+            # Find the maximum resolution from sensor modes
+            max_width = 0
+            max_height = 0
+
+            for mode in sensor_modes:
+                size = mode.get('size', (0, 0))
+                if size[0] * size[1] > max_width * max_height:
+                    max_width, max_height = size
+
+            # If no modes found, check camera properties
+            if max_width == 0 or max_height == 0:
+                camera_props = temp_picam.camera_properties
+                pixel_array_size = camera_props.get('PixelArraySize', [1920, 1080])
+                max_width = pixel_array_size[0]
+                max_height = pixel_array_size[1]
+
             self.logger.info(f"Camera sensor maximum resolution: {max_width}x{max_height}")
 
+            # Important: Stop and close the temporary instance
+            temp_picam.stop()
             temp_picam.close()
+
+            # Add a small delay to ensure camera is fully released
+            time.sleep(0.5)
+
             return max_width, max_height
 
         except Exception as e:
@@ -100,6 +117,7 @@ class TimelapseCapture:
     def stop(self):
         """Stop the timelapse capture server"""
         if self.picam:
+            self.picam.stop()
             self.picam.close()
         if hasattr(self, 'server') and self.server:
             self.server.shutdown()
@@ -110,13 +128,13 @@ class TimelapseCapture:
         try:
             self.picam = Picamera2()
 
-            # Use still configuration for maximum quality photos
-            config_dict = self.picam.create_still_configuration(
+            # Use preview configuration (like camera_streamer.py) for better compatibility
+            # but with maximum resolution
+            config_dict = self.picam.create_preview_configuration(
                 main={
                     "size": (self.photo_width, self.photo_height),
                     "format": "RGB888"
                 },
-                # Use higher buffer count for better performance with high resolution
                 buffer_count=4
             )
             self.picam.configure(config_dict)
@@ -126,12 +144,23 @@ class TimelapseCapture:
             self.logger.info(f"Waiting {self.camera_warmup_time}s for camera to warm up...")
             time.sleep(self.camera_warmup_time)
 
-            # Set auto white balance and other quality settings
-            self.picam.set_controls({
-                "AwbMode": 6,  # Auto white balance
-                "AeEnable": True,  # Auto exposure
-                "AfEnable": True,  # Auto focus (if available)
-            })
+            # Set camera controls
+            controls = {"AwbMode": 6}  # Auto white balance
+
+            # Only set these if the camera supports them
+            try:
+                self.picam.set_controls({"AeEnable": True})  # Auto exposure
+                controls["AeEnable"] = True
+            except:
+                pass
+
+            try:
+                self.picam.set_controls({"AfMode": 2})  # Continuous auto focus
+                controls["AfMode"] = 2
+            except:
+                pass
+
+            self.picam.set_controls(controls)
 
             self.logger.info("Camera initialized successfully with maximum resolution")
             return True
