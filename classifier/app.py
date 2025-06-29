@@ -54,19 +54,9 @@ def index():
         else:
             clips = db.get_unclassified_clips(config.MAX_VIDEOS_PER_PAGE)
 
-        # Compute relative path for each clip
-        video_dir_abs = os.path.abspath(config.VIDEO_DIR)
+        # Compute relative path for each clip (now just the filename)
         for clip in clips:
-            # Always resolve the file path relative to VIDEO_DIR
-            # Remove the 'downloaded_clips/' prefix if present
-            rel_db_path = os.path.relpath(clip['file_path'], 'downloaded_clips') if clip['file_path'].startswith('downloaded_clips'+os.sep) else clip['file_path']
-            abs_path = os.path.abspath(os.path.join(config.VIDEO_DIR, rel_db_path))
-            if abs_path.startswith(video_dir_abs + os.sep):
-                rel_path = os.path.relpath(abs_path, video_dir_abs)
-            else:
-                rel_path = os.path.basename(abs_path)
-                logger.warning(f"Clip file_path not under VIDEO_DIR: {abs_path}")
-            clip['video_rel_path'] = rel_path
+            clip['video_rel_path'] = clip['filename']
 
         # Get statistics
         stats = db.get_statistics()
