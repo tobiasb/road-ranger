@@ -184,9 +184,17 @@ AUTO_PLAY_VIDEOS = False        # Auto-play option
 
 ## 📂 File Transfer Options
 
-### 🔄 Option 1: Manual SCP
+### 🔄 Option 1: Use Transfer Scripts
 ```bash
-scp -r user@raspberrypi-ddd.local:/home/tobi/ddd/watcher/recorded_clips/ ./inspector/
+# Transfer video clips
+cd inspector/
+./transfer_clips.sh                    # Uses default folder
+./transfer_clips.sh custom_clips       # Custom folder
+
+# Transfer timelapse photos
+cd watcher/
+./transfer_timelapse_photos.sh             # Uses default folder
+./transfer_timelapse_photos.sh my_photos   # Custom folder
 ```
 
 ### 📁 Option 2: Network Share
@@ -196,12 +204,6 @@ cp watcher/recorded_clips/*.mp4 /mnt/nas/ddd_clips/
 
 # Copy from NAS to Inspector
 cp /mnt/nas/ddd_clips/*.mp4 ./inspector/
-```
-
-### 🤖 Option 3: Automated Script
-```bash
-# Use the provided transfer script
-./transfer_clips.sh
 ```
 
 **Note**: The watcher uses atomic file operations to prevent partial file transfers. Files are written to a temporary location first, then moved to the final storage location only when complete.
@@ -332,6 +334,8 @@ road-ranger/
 │   ├── motion_detector.py     # Motion detection (RPi)
 │   ├── video_recorder.py      # Video recording (RPi)
 │   ├── timelapse_capture.py   # High-res photo capture (RPi)
+│   ├── create_timelapse_video.sh  # Create timelapse videos
+│   ├── transfer_timelapse_photos.sh   # Transfer photos from RPi
 │   ├── config.py              # Watcher configuration
 │   ├── setup.sh               # Installation script
 │   ├── recorded_clips/        # Video storage
@@ -341,6 +345,7 @@ road-ranger/
 │   ├── yolo_car_detector.py   # YOLOv8 detection (server)
 │   ├── yolo_car_table.py      # Analysis script (server)
 │   ├── database.py            # Database management
+│   ├── transfer_clips.sh      # Transfer clips from RPi
 │   ├── config.py              # Inspector configuration
 │   ├── Pipfile               # Server dependencies
 │   ├── server_setup.md        # Server setup guide

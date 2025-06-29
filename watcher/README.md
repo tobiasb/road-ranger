@@ -138,10 +138,14 @@ curl http://raspberrypi-ddd.local:8081/capture
 ### Transfer Photos
 
 ```bash
-# Download photos (keeping originals)
-rsync -avz --progress \
-  user@raspberrypi.local:/path/to/timelapse_photos/ \
-  ./timelapse_photos/
+# Transfer photos from Pi (removes originals)
+./transfer_timelapse_photos.sh
+
+# Transfer to custom folder
+./transfer_timelapse_photos.sh my_photos
+
+# Create video from transferred photos
+./create_timelapse_video.sh timelapse_photos/ 30 output.mp4
 ```
 
 ## Viewing Recordings
@@ -159,13 +163,12 @@ python3 view_clips.py /path/to/clips
 To transfer recordings to the Inspector (analysis side):
 
 ```bash
-# Manual transfer
-scp -r user@raspberrypi.local:/home/user/ddd/watcher/recorded_clips/ ./inspector/
+# Transfer video clips (removes originals)
+cd ../inspector/
+./transfer_clips.sh
 
-# Or use rsync for automated transfer
-rsync -avz --remove-source-files \
-  user@raspberrypi.local:/home/user/ddd/watcher/recorded_clips/ \
-  ./inspector/
+# Transfer to custom folder
+./transfer_clips.sh my_clips
 ```
 
 ### Atomic File Operations

@@ -1,16 +1,46 @@
 #!/bin/bash
 
 # Transfer clips from Watcher to Inspector
-# Usage: ./transfer_clips.sh [watcher_host] [source_path] [dest_path]
+# Usage: ./transfer_clips.sh [destination_folder]
 
 # Default values
-WATCHER_HOST=${1:-"tobi@raspberrypi-ddd.local"}
-SOURCE_PATH=${2:-"/home/tobi/ddd/watcher/recorded_clips"}
-DEST_PATH=${3:-"./downloaded_clips"}
+DEFAULT_DEST="downloaded_clips"
+WATCHER_HOST="tobi@raspberrypi-ddd.local"
+SOURCE_PATH="/home/tobi/ddd/watcher/recorded_clips"
 
-echo "🔄 Transferring clips from Watcher to Inspector..."
-echo "   From: $WATCHER_HOST:$SOURCE_PATH"
-echo "   To: $DEST_PATH"
+# Color codes for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Function to display usage
+usage() {
+    echo "Usage: $0 [destination_folder]"
+    echo ""
+    echo "Arguments:"
+    echo "  destination_folder  - Local directory to transfer clips to (default: $DEFAULT_DEST)"
+    echo ""
+    echo "This will transfer from: $WATCHER_HOST:$SOURCE_PATH"
+    echo "Files will be removed from the Raspberry Pi after successful transfer."
+    echo ""
+    echo "Examples:"
+    echo "  $0                     # Transfer to default folder"
+    echo "  $0 my_clips            # Transfer to custom folder"
+    exit 0
+}
+
+# Check for help flag
+if [ "$1" == "-h" ] || [ "$1" == "--help" ]; then
+    usage
+fi
+
+# Parse arguments
+DEST_PATH="${1:-$DEFAULT_DEST}"
+
+echo -e "${YELLOW}🔄 Transferring clips from Watcher to Inspector...${NC}"
+echo -e "${YELLOW}   From: $WATCHER_HOST:$SOURCE_PATH${NC}"
+echo -e "${YELLOW}   To: $DEST_PATH${NC}"
 echo ""
 
 # Create destination directory if it doesn't exist
@@ -24,37 +54,14 @@ rsync -avz --progress --remove-source-files \
 
 if [ $? -eq 0 ]; then
     echo ""
-    echo "✅ Transfer completed successfully!"
-    echo "📁 Clips are now available in: $DEST_PATH"
-
-    # # Verify file integrity for MP4 files
-    # echo "🔍 Verifying file integrity..."
-    # corrupted_files=0
-    # for file in "$DEST_PATH"/*.mp4; do
-    #     if [ -f "$file" ]; then
-    #         # Check if file has proper MP4 headers using ffprobe
-    #         if ! ffprobe -v quiet -print_format json -show_format "$file" >/dev/null 2>&1; then
-    #             echo "⚠️  Corrupted file detected: $(basename "$file")"
-    #             corrupted_files=$((corrupted_files + 1))
-    #             # Move corrupted file to a separate directory
-    #             mkdir -p "$DEST_PATH/corrupted"
-    #             mv "$file" "$DEST_PATH/corrupted/"
-    #         fi
-    #     fi
-    # done
-
-    # if [ $corrupted_files -eq 0 ]; then
-    #     echo "✅ All files verified successfully!"
-    # else
-    #     echo "⚠️  Found $corrupted_files corrupted files (moved to corrupted/ subdirectory)"
-    # fi
-
+    echo -e "${GREEN}✅ Transfer completed successfully!${NC}"
+    echo -e "${GREEN}📁 Clips are now available in: $DEST_PATH${NC}"
     echo ""
     echo "🔍 Next steps:"
     echo "   pipenv run analyze-clips"
 else
     echo ""
-    echo "❌ Transfer failed!"
+    echo -e "${RED}❌ Transfer failed!${NC}"
     echo "   Check your network connection and file permissions."
     exit 1
 fi
