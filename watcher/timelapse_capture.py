@@ -123,9 +123,40 @@ class TimelapseCapture:
             self.server.shutdown()
             self.server.server_close()
 
+    def _cleanup_camera(self):
+        """Cleanup camera resources to prepare for re-initialization"""
+        if self.picam:
+            try:
+                self.picam.stop()
+                self.picam.close()
+                self.logger.info("Camera cleaned up successfully")
+            except Exception as e:
+                self.logger.warning(f"Error during camera cleanup: {e}")
+            finally:
+                self.picam = None
+                # Add a small delay to ensure camera is fully released
+                time.sleep(0.5)
+
+    def _test_camera_connection(self) -> bool:
+        """Test if camera connection is still valid"""
+        if not self.picam:
+            return False
+
+        try:
+            # Try to capture a test frame without saving
+            _ = self.picam.capture_array()
+            return True
+        except Exception as e:
+            self.logger.warning(f"Camera connection test failed: {e}")
+            return False
+
     def _initialize_camera(self):
         """Initialize Picamera2 with maximum resolution settings"""
         try:
+            # Cleanup any existing camera connection first
+            if self.picam:
+                self._cleanup_camera()
+
             self.picam = Picamera2()
 
             # Use preview configuration (like camera_streamer.py) for better compatibility
@@ -166,34 +197,74 @@ class TimelapseCapture:
             return True
         except Exception as e:
             self.logger.error(f"Failed to initialize camera: {e}")
+            # Cleanup on failure
+            self._cleanup_camera()
             return False
 
     def _take_photo(self) -> Optional[str]:
         """Take a single photo and return the file path"""
-        if not self.picam:
-            if not self._initialize_camera():
-                return None
+        max_retries = 3
+        retry_count = 0
 
-        try:
-            # Capture frame at maximum resolution
-            frame = self.picam.capture_array()
+        while retry_count < max_retries:
+            # Initialize camera if not already initialized
+            if not self.picam:
+                if not self._initialize_camera():
+                    self.logger.error(f"Failed to initialize camera on attempt {retry_count + 1}")
+                    retry_count += 1
+                    continue
 
-            # Generate timestamp with milliseconds
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # Remove microseconds, keep milliseconds
+            # Test camera connection before attempting capture
+            if not self._test_camera_connection():
+                self.logger.warning("Camera connection test failed, reinitializing...")
+                self._cleanup_camera()
+                retry_count += 1
+                continue
 
-            # Create filename
-            filename = f"timelapse_{timestamp}.jpg"
-            filepath = os.path.join(self.storage_path, filename)
+            try:
+                # Capture frame at maximum resolution
+                frame = self.picam.capture_array()
 
-            # Save as JPEG with maximum quality (100)
-            cv2.imwrite(filepath, frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
+                # Generate timestamp with milliseconds
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")[:-3]  # Remove microseconds, keep milliseconds
 
-            self.logger.info(f"Photo captured at {self.photo_width}x{self.photo_height}: {filepath}")
-            return filepath
+                # Create filename
+                filename = f"timelapse_{timestamp}.jpg"
+                filepath = os.path.join(self.storage_path, filename)
 
-        except Exception as e:
-            self.logger.error(f"Failed to take photo: {e}")
-            return None
+                # Save as JPEG with maximum quality (100)
+                cv2.imwrite(filepath, frame, [cv2.IMWRITE_JPEG_QUALITY, 100])
+
+                self.logger.info(f"Photo captured at {self.photo_width}x{self.photo_height}: {filepath}")
+                return filepath
+
+            except Exception as e:
+                self.logger.error(f"Failed to take photo (attempt {retry_count + 1}/{max_retries}): {e}")
+
+                # Check if this is a connection error or camera-related error
+                error_msg = str(e).lower()
+                if any(keyword in error_msg for keyword in ['connection', 'timeout', 'closed', 'disconnected', 'invalid', 'failed']):
+                    self.logger.warning("Detected possible connection error, attempting to re-establish camera connection...")
+
+                    # Cleanup existing camera connection
+                    self._cleanup_camera()
+
+                    # Increment retry count
+                    retry_count += 1
+
+                    if retry_count < max_retries:
+                        self.logger.info(f"Retrying camera initialization (attempt {retry_count + 1}/{max_retries})...")
+                        # Add a small delay before retrying
+                        time.sleep(1.0)
+                    continue
+                else:
+                    # For non-connection errors, don't retry
+                    self.logger.error(f"Non-recoverable error: {e}")
+                    return None
+
+        # If we've exhausted all retries
+        self.logger.error(f"Failed to take photo after {max_retries} attempts")
+        return None
 
     def _start_http_server(self):
         """Start HTTP server for photo capture"""
@@ -224,9 +295,12 @@ class TimelapseCapture:
                             'timestamp': datetime.now().isoformat()
                         }
                     else:
+                        # Check if camera needs reinitialization
+                        camera_status = "disconnected" if not capture.picam else "connected but failed"
                         response = {
                             'success': False,
                             'error': 'Failed to take photo',
+                            'camera_status': camera_status,
                             'timestamp': datetime.now().isoformat()
                         }
 
