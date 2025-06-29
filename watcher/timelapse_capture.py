@@ -176,7 +176,18 @@ class TimelapseCapture:
             time.sleep(self.camera_warmup_time)
 
             # Set camera controls
-            controls = {"AwbMode": 6}  # Auto white balance
+            # Use fixed white balance for consistent colors in timelapse
+            # Options: 0=Auto, 1=Tungsten, 2=Fluorescent, 3=Daylight, 4=Cloudy, 5=Custom
+            controls = {
+                "AwbMode": 3,  # Daylight mode for consistent outdoor colors
+                "AwbEnable": True,  # Enable AWB but with fixed mode
+            }
+
+            # Alternatively, you can use manual color gains for absolute control:
+            # controls = {
+            #     "AwbEnable": False,  # Disable auto white balance
+            #     "ColourGains": (1.5, 1.2)  # (red_gain, blue_gain) - adjust these values
+            # }
 
             # Only set these if the camera supports them
             try:
@@ -194,6 +205,7 @@ class TimelapseCapture:
             self.picam.set_controls(controls)
 
             self.logger.info("Camera initialized successfully with maximum resolution")
+            self.logger.info(f"White balance mode: Daylight (fixed for consistent timelapse colors)")
             return True
         except Exception as e:
             self.logger.error(f"Failed to initialize camera: {e}")
