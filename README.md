@@ -25,8 +25,9 @@ Thanks to my employer [Clio](https://github.com/clio) I was able to spend almost
 1. **Motion Detection & Recording** ✅ - Automatically records video clips when motion is detected (Watcher)
 2. **Car Detection** ✅ - Filters clips to identify those containing cars (Inspector)
 3. **Manual Classification** ✅ - Web interface for human review and distraction classification (Classifier)
-4. **Driver Detection** 🔄 - Identifies clips with visible drivers
-5. **Distraction Detection** 🔄 - Analyzes driver behavior for signs of distraction
+4. **Timelapse Photography** ✅ - High-resolution photo capture for creating timelapse videos of traffic patterns
+5. **Driver Detection** 🔄 - Identifies clips with visible drivers
+6. **Distraction Detection** 🔄 - Analyzes driver behavior for signs of distraction
 
 ## 📸 Screenshots
 
@@ -64,7 +65,7 @@ The system is split into three specialized components:
 ### 🕵️ Watcher (Recording Side)
 - **Software**: Python console app
 - **Hardware**: Raspberry Pi 4 + Global Shutter Camera
-- **Role**: Motion detection, video recording, storage
+- **Role**: Motion detection, video recording, storage, timelapse capture
 - **Dependencies**: Lightweight (OpenCV, Picamera2)
 - **Location**: `watcher/` directory
 - **Config**: `watcher/config.py` - Recording and motion detection settings
@@ -97,6 +98,9 @@ cd watcher/
 
 # Start motion recording
 python3 main.py
+
+# (Optional) Start timelapse capture server
+python3 timelapse_capture.py
 ```
 
 In the watcher output you'll see motion being detected and the clips stored locally.
@@ -210,6 +214,19 @@ cd watcher/
 python3 main.py
 ```
 
+### 📸 Timelapse Photography (Optional)
+```bash
+# Start the timelapse capture server
+cd watcher/
+python3 timelapse_capture.py
+
+# Capture photos from another machine
+curl http://raspberrypi-ddd.local:8081/capture
+
+# Set up automated capture (e.g., every 5 minutes)
+*/5 * * * * curl http://raspberrypi-ddd.local:8081/capture
+```
+
 ### 🔍 Phase 2: Car Detection (Inspector)
 ```bash
 cd inspector/
@@ -233,9 +250,10 @@ Then open your browser to **http://localhost:5001** and:
 
 ### 🔄 Complete Workflow
 1. **Watcher** records motion-triggered video clips
-2. **Inspector** analyzes clips for car detection and stores results in database
-3. **Classifier** provides web interface for manual distraction classification
-4. All components share the same database for seamless data flow
+2. **Timelapse** (optional) captures high-resolution photos for traffic pattern analysis
+3. **Inspector** analyzes clips for car detection and stores results in database
+4. **Classifier** provides web interface for manual distraction classification
+5. All components share the same database for seamless data flow
 
 ## ⚡ Performance Notes
 
@@ -313,9 +331,11 @@ road-ranger/
 │   ├── main.py                # Motion recording (RPi)
 │   ├── motion_detector.py     # Motion detection (RPi)
 │   ├── video_recorder.py      # Video recording (RPi)
+│   ├── timelapse_capture.py   # High-res photo capture (RPi)
 │   ├── config.py              # Watcher configuration
 │   ├── setup.sh               # Installation script
 │   ├── recorded_clips/        # Video storage
+│   ├── timelapse_photos/      # Timelapse photo storage
 │   └── README.md              # Watcher documentation
 ├── inspector/                  # ML Analysis & Car Detection
 │   ├── yolo_car_detector.py   # YOLOv8 detection (server)

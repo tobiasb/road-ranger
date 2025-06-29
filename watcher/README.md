@@ -10,6 +10,7 @@ The Watcher system:
 - **Records** video clips when motion is detected
 - **Manages** storage and cleanup automatically
 - **Provides** tools for viewing and debugging recordings
+- **Captures** high-resolution photos for timelapse creation
 
 ## Quick Start
 
@@ -65,6 +66,9 @@ Manages video recording, encoding, and file management.
 ### `camera_streamer.py`
 Provides camera interface and frame capture functionality.
 
+### `timelapse_capture.py`
+HTTP endpoint for capturing high-resolution photos for timelapse videos.
+
 ### `config.py`
 Central configuration for all recording parameters.
 
@@ -101,6 +105,44 @@ The camera streamer provides:
 - High resolution for camera calibration
 - Auto-refresh functionality
 - Useful for positioning and testing camera setup
+
+## Timelapse Photography
+
+The watcher includes a dedicated HTTP endpoint for capturing high-resolution photos for timelapse videos.
+
+### Quick Start
+
+```bash
+# Start the server
+python3 timelapse_capture.py
+
+# Capture a photo (from another machine)
+curl http://raspberrypi-ddd.local:8081/capture
+```
+
+### Features
+
+- **Maximum Resolution**: Auto-detects and uses camera's highest resolution (e.g., 4056x3040 for Camera Module 3)
+- **Fixed White Balance**: Daylight mode prevents color shifts between photos
+- **Timestamped Filenames**: Millisecond precision prevents collisions
+- **Auto-Retry**: Handles temporary camera disconnections
+- **JSON Response**: Returns success/failure with metadata
+
+### Automated Capture
+
+```bash
+# Cron job example (every 5 minutes)
+*/5 * * * * curl http://raspberrypi-ddd.local:8081/capture
+```
+
+### Transfer Photos
+
+```bash
+# Download photos (keeping originals)
+rsync -avz --progress \
+  user@raspberrypi.local:/path/to/timelapse_photos/ \
+  ./timelapse_photos/
+```
 
 ## Viewing Recordings
 
@@ -168,12 +210,18 @@ python3 test_atomic_writing.py
 - Adjust `CLIP_RETENTION_DAYS` for cleanup
 - Consider external storage for large deployments
 
+### Timelapse Issues
+- **Color shifts**: Fixed with daylight white balance mode
+- **Camera busy**: Stop other camera processes first
+- **Connection errors**: Endpoint includes automatic retry logic
+
 ## Performance Notes
 
 - Designed for lightweight operation on Raspberry Pi
 - Efficient motion detection with minimal CPU usage
 - Automatic cleanup prevents storage overflow
 - Configurable recording windows reduce unnecessary processing
+- Timelapse capture uses maximum resolution without impacting motion detection
 
 ## Architecture
 
@@ -182,6 +230,7 @@ The Watcher follows a simple, reliable architecture:
 2. **Recording Manager** - Handles clip creation and storage
 3. **Storage Manager** - Manages cleanup and organization
 4. **Configuration System** - Centralized settings management
+5. **Timelapse Endpoint** - Independent HTTP service for photo capture
 
 This design ensures the system can run continuously without manual intervention while maintaining good performance on limited hardware.
 
