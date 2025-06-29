@@ -52,3 +52,4 @@ yolo*.pt
 inspector/server.lock
 inspector/server.pid
 inspector/car_detection.db
+timelapse_*.jpg
